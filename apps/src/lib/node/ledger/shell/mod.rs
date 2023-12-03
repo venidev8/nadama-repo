@@ -8,6 +8,7 @@
 pub mod block_alloc;
 mod finalize_block;
 mod governance;
+mod ibc;
 mod init_chain;
 pub mod prepare_proposal;
 pub mod process_proposal;

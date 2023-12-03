@@ -1,6 +1,7 @@
 //! Implementation of the `FinalizeBlock` ABCI++ method for the Shell
 
 use data_encoding::HEXUPPER;
+use namada::core::ledger::governance::storage::proposal::PGFTarget;
 use namada::core::ledger::inflation;
 use namada::core::ledger::masp_conversions::update_allowed_conversions;
 use namada::core::ledger::pgf::ADDRESS as pgf_address;
@@ -750,26 +751,36 @@ where
         pgf_fundings.sort_by(|a, b| a.id.cmp(&b.id));
 
         for funding in pgf_fundings {
-            if storage_api::token::transfer(
-                &mut self.wl_storage,
-                &staking_token,
-                &pgf_address,
-                &funding.detail.target,
-                funding.detail.amount,
-            )
-            .is_ok()
-            {
-                tracing::info!(
-                    "Paying {} tokens for {} project.",
-                    funding.detail.amount.to_string_native(),
-                    &funding.detail.target,
-                );
-            } else {
-                tracing::warn!(
-                    "Failed to pay {} tokens for {} project.",
-                    funding.detail.amount.to_string_native(),
-                    &funding.detail.target,
-                );
+            let result = match &funding.detail {
+                PGFTarget::Internal(target) => storage_api::token::transfer(
+                    &mut self.wl_storage,
+                    &staking_token,
+                    &pgf_address,
+                    &target.target,
+                    target.amount,
+                ),
+                PGFTarget::Ibc(target) => ibc::transfer_over_ibc(
+                    &mut self.wl_storage,
+                    &staking_token,
+                    &pgf_address,
+                    target,
+                ),
+            };
+            match result {
+                Ok(()) => {
+                    tracing::info!(
+                        "Paying {} tokens for {} project.",
+                        funding.detail.amount().to_string_native(),
+                        &funding.detail.target(),
+                    );
+                }
+                Err(_) => {
+                    tracing::warn!(
+                        "Failed to pay {} tokens for {} project.",
+                        funding.detail.amount().to_string_native(),
+                        &funding.detail.target(),
+                    );
+                }
             }
         }
 
