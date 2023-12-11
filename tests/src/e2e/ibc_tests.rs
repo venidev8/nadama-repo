@@ -127,7 +127,7 @@ fn run_ledger_ibc() -> Result<()> {
     try_invalid_transfers(&test_a, &test_b, &port_id_a, &channel_id_a)?;
 
     // Transfer 50000 received over IBC on Chain B
-    transfer_received_token(&port_id_b, &channel_id_b, &test_a, &test_b)?;
+    transfer_received_token(&port_id_b, &channel_id_b, &test_b)?;
     check_balances_after_non_ibc(&port_id_b, &channel_id_b, &test_b)?;
 
     // Transfer 50000 back from the origin-specific account on Chain B to Chain
@@ -208,7 +208,7 @@ fn run_ledger_ibc_with_hermes() -> Result<()> {
     check_balances(&port_id_b, &channel_id_b, &test_a, &test_b)?;
 
     // Transfer 50000 received over IBC on Chain B
-    transfer_received_token(&port_id_b, &channel_id_b, &test_a, &test_b)?;
+    transfer_received_token(&port_id_b, &channel_id_b, &test_b)?;
     check_balances_after_non_ibc(&port_id_b, &channel_id_b, &test_b)?;
 
     // Transfer 50000 back from the origin-specific account on Chain B to Chain
@@ -283,12 +283,12 @@ fn run_two_nets() -> Result<(NamadaCmd, NamadaCmd, Test, Test)> {
     let mut ledger_a =
         run_as!(test_a, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
     ledger_a.exp_string("Namada ledger node started")?;
+    ledger_a.exp_string("This node is a validator")?;
     // Run Chain B
     std::env::set_var(ENV_VAR_CHAIN_ID, test_b.net.chain_id.to_string());
     let mut ledger_b =
         run_as!(test_b, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
     ledger_b.exp_string("Namada ledger node started")?;
-    ledger_a.exp_string("This node is a validator")?;
     ledger_b.exp_string("This node is a validator")?;
 
     wait_for_wasm_pre_compile(&mut ledger_a)?;
@@ -1009,13 +1009,10 @@ fn try_invalid_transfers(
 fn transfer_received_token(
     port_id: &PortId,
     channel_id: &ChannelId,
-    test_a: &Test,
     test_b: &Test,
 ) -> Result<()> {
-    std::env::set_var(ENV_VAR_CHAIN_ID, test_a.net.chain_id.to_string());
-    let org_nam_addr = find_address(test_a, NAM).unwrap();
     std::env::set_var(ENV_VAR_CHAIN_ID, test_b.net.chain_id.to_string());
-    let ibc_denom = format!("{port_id}/{channel_id}/{org_nam_addr}");
+    let ibc_denom = format!("{port_id}/{channel_id}/nam");
     let rpc = get_actor_rpc(test_b, &Who::Validator(0));
     let amount = Amount::native_whole(50000).to_string_native();
     let tx_args = [
