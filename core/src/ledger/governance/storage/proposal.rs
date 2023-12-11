@@ -5,7 +5,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::ibc::core::ics24_host::identifier::{ChannelId, PortId};
+use crate::ibc::core::host::types::identifiers::{ChannelId, PortId};
 use crate::ledger::governance::cli::onchain::{
     PgfAction, PgfContinous, PgfRetro, PgfSteward, StewardsUpdate,
 };
