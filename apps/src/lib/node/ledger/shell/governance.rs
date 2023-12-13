@@ -135,6 +135,13 @@ where
                             id
                         );
 
+                        for ibc_event in
+                            shell.wl_storage.write_log_mut().take_ibc_events()
+                        {
+                            let event = Event::from(ibc_event.clone());
+                            response.events.push(event);
+                        }
+
                         ProposalEvent::pgf_payments_proposal_event(id, result)
                             .into()
                     }
