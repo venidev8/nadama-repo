@@ -80,14 +80,17 @@ use namada_core::types::string_encoding::StringEncoded;
 use namada_sdk::masp::fs::FsShieldedUtils;
 use prost::Message;
 use setup::constants::*;
+use sha2::{Digest, Sha256};
 use tendermint_light_client::components::io::{Io, ProdIo as TmLightClientIo};
 
 use super::setup::set_ethereum_bridge_mode;
 use crate::e2e::helpers::{
-    find_address, get_actor_rpc, get_validator_pk, wait_for_wasm_pre_compile,
+    find_address, find_gaia_address, get_actor_rpc, get_validator_pk,
+    wait_for_wasm_pre_compile,
 };
 use crate::e2e::setup::{
-    self, run_hermes_cmd, setup_hermes, sleep, Bin, NamadaCmd, Test, Who,
+    self, run_gaia_cmd, run_hermes_cmd, setup_gaia, setup_hermes, sleep, Bin,
+    NamadaCmd, Test, Who,
 };
 use crate::{run, run_as};
 
@@ -177,11 +180,14 @@ fn run_ledger_ibc_with_hermes() -> Result<()> {
     let _bg_ledger_a = ledger_a.background();
     let _bg_ledger_b = ledger_b.background();
 
-    setup_hermes(&test_a, &test_b)?;
+    setup_hermes(&test_a, Some(&test_b))?;
     let port_id_a = "transfer".parse().unwrap();
     let port_id_b = "transfer".parse().unwrap();
-    let (channel_id_a, channel_id_b) =
-        create_channel_with_hermes(&test_a, &test_b)?;
+    let (channel_id_a, channel_id_b) = create_channel_with_hermes(
+        &test_a,
+        &test_a.net.chain_id.to_string(),
+        &test_b.net.chain_id.to_string(),
+    )?;
 
     // Start relaying
     let hermes = run_hermes(&test_a)?;
@@ -257,6 +263,74 @@ fn run_ledger_ibc_with_hermes() -> Result<()> {
     wait_for_packet_relay(&port_id_a, &channel_id_a, &test_a)?;
     // The balance should not be changed
     check_balances_after_back(&port_id_b, &channel_id_b, &test_a, &test_b)?;
+
+    Ok(())
+}
+
+#[test]
+fn ibc_namada_gaia_with_hermes() -> Result<()> {
+    // epoch per 100 seconds
+    let update_genesis =
+        |mut genesis: templates::All<templates::Unvalidated>, base_dir: &_| {
+            genesis.parameters.parameters.epochs_per_year = 31536;
+            setup::set_validators(1, genesis, base_dir, |_| 0)
+        };
+    let test = setup::network(update_genesis, None)?;
+    set_ethereum_bridge_mode(
+        &test,
+        &test.net.chain_id,
+        &Who::Validator(0),
+        ethereum_bridge::ledger::Mode::Off,
+        None,
+    );
+    let mut ledger =
+        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
+    ledger.exp_string("Namada ledger node started")?;
+    ledger.exp_string("This node is a validator")?;
+    wait_for_wasm_pre_compile(&mut ledger)?;
+    sleep(5);
+    let _bg_ledger = ledger.background();
+
+    // gaia
+    setup_gaia(&test)?;
+    let gaia = run_gaia(&test)?;
+    sleep(5);
+    let _bg_gaia = gaia.background();
+
+    setup_hermes(&test, None)?;
+    let port_id_namada = "transfer".parse().unwrap();
+    let port_id_gaia: PortId = "transfer".parse().unwrap();
+    let (channel_id_namada, channel_id_gaia) = create_channel_with_hermes(
+        &test,
+        &test.net.chain_id.to_string(),
+        "gaia",
+    )?;
+
+    // Start relaying
+    let hermes = run_hermes(&test)?;
+    let _bg_hermes = hermes.background();
+
+    let receiver = find_gaia_address(&test, GAIA_USER)?;
+    // Send a token from Namada to Gaia
+    transfer(
+        &test,
+        ALBERT,
+        receiver,
+        NAM,
+        "500",
+        ALBERT_KEY,
+        &port_id_namada,
+        &channel_id_namada,
+        None,
+        None,
+        None,
+        false,
+    )?;
+    wait_for_packet_relay(&port_id_namada, &channel_id_namada, &test)?;
+
+    let nam_addr = find_address(&test, NAM)?;
+    let ibc_denom = format!("{port_id_gaia}/{channel_id_gaia}/{nam_addr}");
+    check_gaia_balance(&test, GAIA_USER, ibc_denom, 500)?;
 
     Ok(())
 }
@@ -377,16 +451,17 @@ fn setup_two_single_node_nets() -> Result<(Test, Test)> {
 }
 
 fn create_channel_with_hermes(
-    test_a: &Test,
-    test_b: &Test,
+    test: &Test,
+    chain_a: impl AsRef<str>,
+    chain_b: impl AsRef<str>,
 ) -> Result<(ChannelId, ChannelId)> {
     let args = [
         "create",
         "channel",
         "--a-chain",
-        &test_a.net.chain_id.to_string(),
+        chain_a.as_ref(),
         "--b-chain",
-        &test_b.net.chain_id.to_string(),
+        chain_b.as_ref(),
         "--a-port",
         "transfer",
         "--b-port",
@@ -395,7 +470,7 @@ fn create_channel_with_hermes(
         "--yes",
     ];
 
-    let mut hermes = run_hermes_cmd(test_a, args, Some(120))?;
+    let mut hermes = run_hermes_cmd(test, args, Some(120))?;
     let (channel_id_a, channel_id_b) =
         get_channel_ids_from_hermes_output(&mut hermes)?;
     hermes.assert_success();
@@ -422,6 +497,18 @@ fn run_hermes(test: &Test) -> Result<NamadaCmd> {
     let mut hermes = run_hermes_cmd(test, args, Some(40))?;
     hermes.exp_string("Hermes has started")?;
     Ok(hermes)
+}
+
+fn run_gaia(test: &Test) -> Result<NamadaCmd> {
+    let args = [
+        "start",
+        "--pruning",
+        "nothing",
+        "--grpc.address",
+        "0.0.0.0:9090",
+    ];
+    let gaia = run_gaia_cmd(test, args, Some(40))?;
+    Ok(gaia)
 }
 
 fn wait_for_packet_relay(
@@ -1569,6 +1656,45 @@ fn convert_proof(tm_proof: TmProof) -> Result<CommitmentProofBytes> {
     })
 }
 
+fn check_balance(
+    test: &Test,
+    owner: impl AsRef<str>,
+    token: impl AsRef<str>,
+    expected: impl AsRef<str>,
+) -> Result<()> {
+    std::env::set_var(ENV_VAR_CHAIN_ID, test.net.chain_id.to_string());
+    let rpc = get_actor_rpc(test, &Who::Validator(0));
+    let query_args = vec![
+        "balance",
+        "--owner",
+        owner.as_ref(),
+        "--token",
+        token.as_ref(),
+        "--node",
+        &rpc,
+    ];
+    let mut client = run!(test, Bin::Client, query_args, Some(40))?;
+    client.exp_string(expected.as_ref())?;
+    Ok(())
+}
+
+fn check_gaia_balance(
+    test: &Test,
+    owner: impl AsRef<str>,
+    denom: impl AsRef<str>,
+    expected_amount: u64,
+) -> Result<()> {
+    let addr = find_gaia_address(test, owner)?;
+    let args = ["--node", GAIA_RPC, "query", "bank", "balances", &addr];
+    let mut gaia = run_gaia_cmd(test, args, Some(40))?;
+    gaia.exp_string(&format!("amount: \"{expected_amount}\""))?;
+    // denom hash
+    let mut hasher = Sha256::new();
+    hasher.update(denom.as_ref());
+    let hash = hasher.finalize();
+    gaia.exp_string(&format!("denom: ibc/{:X}", hash))?;
+    Ok(())
+}
 /// Check balances after IBC transfer
 fn check_balances(
     dest_port_id: &PortId,

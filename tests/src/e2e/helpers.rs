@@ -1,6 +1,6 @@
 //! E2E test helpers
 
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::future::Future;
 use std::io::Write;
 use std::path::Path;
@@ -32,7 +32,7 @@ use namada_sdk::wallet::Wallet;
 use toml::Value;
 
 use super::setup::{
-    self, sleep, NamadaBgCmd, NamadaCmd, Test, ENV_VAR_DEBUG,
+    self, run_gaia_cmd, sleep, NamadaBgCmd, NamadaCmd, Test, ENV_VAR_DEBUG,
     ENV_VAR_USE_PREBUILT_BINARIES,
 };
 use crate::e2e::setup::{Bin, Who, APPS_PACKAGE};
@@ -506,7 +506,7 @@ pub fn epochs_per_year_from_min_duration(min_duration: u64) -> u64 {
 }
 
 /// Make a Hermes config
-pub fn make_hermes_config(test_a: &Test, test_b: &Test) -> Result<()> {
+pub fn make_hermes_config(test_a: &Test, test_b: Option<&Test>) -> Result<()> {
     let mut config = toml::map::Map::new();
 
     let mut global = toml::map::Map::new();
@@ -545,7 +545,10 @@ pub fn make_hermes_config(test_a: &Test, test_b: &Test) -> Result<()> {
 
     let chains = vec![
         make_hermes_chain_config(test_a),
-        make_hermes_chain_config(test_b),
+        match test_b {
+            Some(test) => make_hermes_chain_config(test),
+            None => make_hermes_chain_config_for_gaia(test_a),
+        },
     ];
 
     config.insert("chains".to_owned(), Value::Array(chains));
@@ -560,13 +563,15 @@ pub fn make_hermes_config(test_a: &Test, test_b: &Test) -> Result<()> {
     })?;
     // One Hermes config.toml is OK, but add one more config.toml to execute
     // Hermes from test_b
-    let hermes_dir = test_b.test_dir.as_ref().join("hermes");
-    std::fs::create_dir_all(&hermes_dir).unwrap();
-    let config_path = hermes_dir.join("config.toml");
-    let mut file = File::create(config_path).unwrap();
-    file.write_all(toml_string.as_bytes()).map_err(|e| {
-        eyre!(format!("Writing a Hermes config failed: {}", e,))
-    })?;
+    if let Some(test_b) = test_b {
+        let hermes_dir = test_b.test_dir.as_ref().join("hermes");
+        std::fs::create_dir_all(&hermes_dir).unwrap();
+        let config_path = hermes_dir.join("config.toml");
+        let mut file = File::create(config_path).unwrap();
+        file.write_all(toml_string.as_bytes()).map_err(|e| {
+            eyre!(format!("Writing a Hermes config failed: {}", e,))
+        })?;
+    }
 
     Ok(())
 }
@@ -600,6 +605,11 @@ fn make_hermes_chain_config(test: &Test) -> Value {
         "key_name".to_owned(),
         Value::String(setup::constants::CHRISTEL_KEY.to_owned()),
     );
+    let key_dir = test.test_dir.as_ref().join("hermes/keys");
+    chain.insert(
+        "key_store_folder".to_owned(),
+        Value::String(key_dir.to_string_lossy().to_string()),
+    );
     chain.insert("store_prefix".to_owned(), Value::String("ibc".to_owned()));
     let mut table = toml::map::Map::new();
     table.insert("price".to_owned(), Value::Float(0.001));
@@ -609,4 +619,87 @@ fn make_hermes_chain_config(test: &Test) -> Value {
     chain.insert("gas_price".to_owned(), Value::Table(table));
 
     Value::Table(chain)
+}
+
+fn make_hermes_chain_config_for_gaia(test: &Test) -> Value {
+    let mut table = toml::map::Map::new();
+    table.insert("mode".to_owned(), Value::String("push".to_owned()));
+    let url = "ws://127.0.0.1:26657/websocket".to_string();
+    table.insert("url".to_owned(), Value::String(url));
+    table.insert("batch_delay".to_owned(), Value::String("500ms".to_owned()));
+    let event_source = Value::Table(table);
+
+    let mut chain = toml::map::Map::new();
+    chain.insert("id".to_owned(), Value::String("gaia".to_string()));
+    chain.insert("type".to_owned(), Value::String("CosmosSdk".to_owned()));
+    chain.insert(
+        "rpc_addr".to_owned(),
+        Value::String(format!("http://127.0.0.1:26657")),
+    );
+    chain.insert(
+        "grpc_addr".to_owned(),
+        Value::String("http://127.0.0.1:9090".to_owned()),
+    );
+    chain.insert("event_source".to_owned(), event_source);
+    chain.insert(
+        "account_prefix".to_owned(),
+        Value::String("cosmos".to_owned()),
+    );
+    chain.insert(
+        "key_name".to_owned(),
+        Value::String(setup::constants::GAIA_RELAYER.to_string()),
+    );
+    let key_dir = test.test_dir.as_ref().join("hermes/keys");
+    chain.insert(
+        "key_store_folder".to_owned(),
+        Value::String(key_dir.to_string_lossy().to_string()),
+    );
+    chain.insert("store_prefix".to_owned(), Value::String("ibc".to_owned()));
+    let mut table = toml::map::Map::new();
+    table.insert("price".to_owned(), Value::Float(0.001));
+    table.insert("denom".to_owned(), Value::String("stake".to_string()));
+    chain.insert("gas_price".to_owned(), Value::Table(table));
+
+    Value::Table(chain)
+}
+
+pub fn update_gaia_config(test: &Test) -> Result<()> {
+    let config_path = test.test_dir.as_ref().join("gaia/config/config.toml");
+    let s = std::fs::read_to_string(&config_path)
+        .expect("Reading Gaia config failed");
+    let mut values = s
+        .parse::<toml::Value>()
+        .expect("Parsing Gaia config failed");
+    if let Some(timeout_commit) = values
+        .get_mut("consensus")
+        .and_then(|v| v.get_mut("timeout_commit"))
+    {
+        *timeout_commit = "1s".into();
+    }
+    let mut file = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open(&config_path)?;
+    file.write_all(values.to_string().as_bytes()).map_err(|e| {
+        eyre!(format!("Writing a Gaia config file failed: {}", e))
+    })?;
+    Ok(())
+}
+
+pub fn find_gaia_address(
+    test: &Test,
+    alias: impl AsRef<str>,
+) -> Result<String> {
+    let args = [
+        "keys",
+        "--keyring-backend",
+        "test",
+        "show",
+        alias.as_ref(),
+        "-a",
+    ];
+    let mut gaia = run_gaia_cmd(test, args, Some(40))?;
+    let (_, matched) = gaia.exp_regex("cosmos.*")?;
+
+    Ok(matched.trim().to_string())
 }
