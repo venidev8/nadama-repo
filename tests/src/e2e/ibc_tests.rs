@@ -299,7 +299,7 @@ fn ibc_namada_gaia_with_hermes() -> Result<()> {
 
     setup_hermes(&test, None)?;
     let port_id_namada = "transfer".parse().unwrap();
-    let port_id_gaia: PortId = "transfer".parse().unwrap();
+    let port_id_gaia = "transfer".parse().unwrap();
     let (channel_id_namada, channel_id_gaia) = create_channel_with_hermes(
         &test,
         test.net.chain_id.to_string(),
@@ -311,13 +311,13 @@ fn ibc_namada_gaia_with_hermes() -> Result<()> {
     let _bg_hermes = hermes.background();
 
     let receiver = find_gaia_address(&test, GAIA_USER)?;
-    // Send a token from Namada to Gaia
+    // Transfer from Namada to Gaia
     transfer(
         &test,
         ALBERT,
         receiver,
-        NAM,
-        "500",
+        APFEL,
+        "200",
         ALBERT_KEY,
         &port_id_namada,
         &channel_id_namada,
@@ -328,9 +328,45 @@ fn ibc_namada_gaia_with_hermes() -> Result<()> {
     )?;
     wait_for_packet_relay(&port_id_namada, &channel_id_namada, &test)?;
 
-    let nam_addr = find_address(&test, NAM)?;
+    // Check the received token on Gaia
+    let nam_addr = find_address(&test, APFEL)?;
     let ibc_denom = format!("{port_id_gaia}/{channel_id_gaia}/{nam_addr}");
-    check_gaia_balance(&test, GAIA_USER, ibc_denom, 500)?;
+    check_gaia_balance(&test, GAIA_USER, &ibc_denom, 200)?;
+
+    // Transfer back from Gaia to Namada
+    let receiver = find_address(&test, ALBERT)?.to_string();
+    transfer_from_gaia(
+        &test,
+        GAIA_USER,
+        receiver,
+        get_gaia_denom_hash(ibc_denom),
+        "100",
+        &port_id_gaia,
+        &channel_id_gaia,
+        None,
+    )?;
+    wait_for_packet_relay(&port_id_gaia, &channel_id_gaia, &test)?;
+
+    // Check the token on Namada
+    check_balance(&test, ALBERT, APFEL, 999900)?;
+
+    // Transfer a token from Gaia to Namada
+    let receiver = find_address(&test, ALBERT)?.to_string();
+    transfer_from_gaia(
+        &test,
+        GAIA_USER,
+        receiver,
+        GAIA_COIN,
+        "200",
+        &port_id_gaia,
+        &channel_id_gaia,
+        None,
+    )?;
+    wait_for_packet_relay(&port_id_gaia, &channel_id_gaia, &test)?;
+
+    // Check the token on Namada
+    let ibc_denom = format!("{port_id_namada}/{channel_id_namada}/{GAIA_COIN}");
+    check_balance(&test, ALBERT, ibc_denom, 200)?;
 
     Ok(())
 }
@@ -1512,6 +1548,55 @@ fn transfer(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
+fn transfer_from_gaia(
+    test: &Test,
+    sender: impl AsRef<str>,
+    receiver: impl AsRef<str>,
+    token: impl AsRef<str>,
+    amount: impl AsRef<str>,
+    port_id: &PortId,
+    channel_id: &ChannelId,
+    memo: Option<&str>,
+) -> Result<()> {
+    let port_id = port_id.to_string();
+    let channel_id = channel_id.to_string();
+    let amount = format!("{}{}", amount.as_ref(), token.as_ref());
+    let rpc = format!("tcp://{GAIA_RPC}");
+    let mut args = vec![
+        "tx",
+        "ibc-transfer",
+        "transfer",
+        &port_id,
+        &channel_id,
+        receiver.as_ref(),
+        &amount,
+        "--from",
+        sender.as_ref(),
+        "--node",
+        &rpc,
+        "--keyring-backend",
+        "test",
+        "--chain-id",
+        GAIA_CHAIN_ID,
+        "--yes",
+    ];
+
+    let memo_str = match memo {
+        Some(memo_path) => std::fs::read_to_string(memo_path)
+            .expect("Reading a memo file failed"),
+        None => String::default(),
+    };
+    if !memo_str.is_empty() {
+        args.push("--memo");
+        args.push(&memo_str);
+    }
+
+    let mut gaia = run_gaia_cmd(test, args, Some(40))?;
+    gaia.assert_success();
+    Ok(())
+}
+
 fn check_tx_height(test: &Test, client: &mut NamadaCmd) -> Result<u32> {
     let (unread, matched) = client.exp_regex("\"height\": .*,")?;
     let height_str = matched
@@ -1660,7 +1745,7 @@ fn check_balance(
     test: &Test,
     owner: impl AsRef<str>,
     token: impl AsRef<str>,
-    expected: impl AsRef<str>,
+    expected_amount: u64,
 ) -> Result<()> {
     std::env::set_var(ENV_VAR_CHAIN_ID, test.net.chain_id.to_string());
     let rpc = get_actor_rpc(test, &Who::Validator(0));
@@ -1674,8 +1759,17 @@ fn check_balance(
         &rpc,
     ];
     let mut client = run!(test, Bin::Client, query_args, Some(40))?;
-    client.exp_string(expected.as_ref())?;
+    let expected =
+        format!("{}: {expected_amount}", token.as_ref().to_lowercase());
+    client.exp_string(&expected)?;
     Ok(())
+}
+
+fn get_gaia_denom_hash(denom: impl AsRef<str>) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(denom.as_ref());
+    let hash = hasher.finalize();
+    format!("ibc/{hash:X}")
 }
 
 fn check_gaia_balance(
@@ -1686,22 +1780,19 @@ fn check_gaia_balance(
 ) -> Result<()> {
     let addr = find_gaia_address(test, owner)?;
     let args = [
-        "--node",
-        &format!("tcp://{GAIA_RPC}"),
         "query",
         "bank",
         "balances",
         &addr,
+        "--node",
+        &format!("tcp://{GAIA_RPC}"),
     ];
     let mut gaia = run_gaia_cmd(test, args, Some(40))?;
     gaia.exp_string(&format!("amount: \"{expected_amount}\""))?;
-    // denom hash
-    let mut hasher = Sha256::new();
-    hasher.update(denom.as_ref());
-    let hash = hasher.finalize();
-    gaia.exp_string(&format!("denom: ibc/{:X}", hash))?;
+    gaia.exp_string(&format!("denom: {}", get_gaia_denom_hash(denom)))?;
     Ok(())
 }
+
 /// Check balances after IBC transfer
 fn check_balances(
     dest_port_id: &PortId,

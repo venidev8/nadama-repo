@@ -1291,12 +1291,19 @@ pub fn setup_gaia(test: &Test) -> Result<()> {
         })?;
     }
 
-    // Add stake
+    // Add tokens to a user account
+    let account = find_gaia_address(test, constants::GAIA_USER)?;
+    let args = ["add-genesis-account", &account, "1000stake,1000samoleans"];
+    let mut gaia = run_gaia_cmd(test, args, Some(10))?;
+    gaia.assert_success();
+
+    // Add the stake token to the relayer
     let account = find_gaia_address(test, constants::GAIA_RELAYER)?;
     let args = ["add-genesis-account", &account, "10000stake"];
     let mut gaia = run_gaia_cmd(test, args, Some(10))?;
     gaia.assert_success();
 
+    // Add the stake token to the validator
     let validator = find_gaia_address(test, constants::GAIA_VALIDATOR)?;
     let stake = "100000000000stake";
     let args = ["add-genesis-account", &validator, stake];
@@ -1443,6 +1450,7 @@ pub mod constants {
     pub const GAIA_USER: &str = "user";
     pub const GAIA_RELAYER: &str = "relayer";
     pub const GAIA_VALIDATOR: &str = "validator";
+    pub const GAIA_COIN: &str = "samoleans";
 }
 
 /// Copy WASM files from the `wasm` directory to every node's chain dir.
