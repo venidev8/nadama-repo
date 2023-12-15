@@ -4434,11 +4434,7 @@ dependencies = [
 
 [[package]]
 name = "namada_parameters"
-version = "0.28.1"
-dependencies = [
- "namada_core",
- "namada_storage",
-]
+version = "0.1.0"
 
 [[package]]
 name = "namada_proof_of_stake"
@@ -4521,7 +4517,11 @@ version = "0.1.0"
 name = "namada_storage"
 version = "0.28.1"
 dependencies = [
+ "ics23",
  "namada_core",
+ "namada_gas",
+ "namada_tx",
+ "sparse-merkle-tree",
 ]
 
 [[package]]
