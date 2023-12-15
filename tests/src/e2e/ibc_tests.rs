@@ -185,8 +185,8 @@ fn run_ledger_ibc_with_hermes() -> Result<()> {
     let port_id_b = "transfer".parse().unwrap();
     let (channel_id_a, channel_id_b) = create_channel_with_hermes(
         &test_a,
-        &test_a.net.chain_id.to_string(),
-        &test_b.net.chain_id.to_string(),
+        test_a.net.chain_id.to_string(),
+        test_b.net.chain_id.to_string(),
     )?;
 
     // Start relaying
@@ -302,7 +302,7 @@ fn ibc_namada_gaia_with_hermes() -> Result<()> {
     let port_id_gaia: PortId = "transfer".parse().unwrap();
     let (channel_id_namada, channel_id_gaia) = create_channel_with_hermes(
         &test,
-        &test.net.chain_id.to_string(),
+        test.net.chain_id.to_string(),
         "gaia",
     )?;
 
@@ -1685,7 +1685,14 @@ fn check_gaia_balance(
     expected_amount: u64,
 ) -> Result<()> {
     let addr = find_gaia_address(test, owner)?;
-    let args = ["--node", GAIA_RPC, "query", "bank", "balances", &addr];
+    let args = [
+        "--node",
+        &format!("tcp://{GAIA_RPC}"),
+        "query",
+        "bank",
+        "balances",
+        &addr,
+    ];
     let mut gaia = run_gaia_cmd(test, args, Some(40))?;
     gaia.exp_string(&format!("amount: \"{expected_amount}\""))?;
     // denom hash

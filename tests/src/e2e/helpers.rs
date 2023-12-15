@@ -624,7 +624,7 @@ fn make_hermes_chain_config(test: &Test) -> Value {
 fn make_hermes_chain_config_for_gaia(test: &Test) -> Value {
     let mut table = toml::map::Map::new();
     table.insert("mode".to_owned(), Value::String("push".to_owned()));
-    let url = "ws://127.0.0.1:26657/websocket".to_string();
+    let url = format!("ws://{}/websocket", setup::constants::GAIA_RPC);
     table.insert("url".to_owned(), Value::String(url));
     table.insert("batch_delay".to_owned(), Value::String("500ms".to_owned()));
     let event_source = Value::Table(table);
@@ -634,7 +634,7 @@ fn make_hermes_chain_config_for_gaia(test: &Test) -> Value {
     chain.insert("type".to_owned(), Value::String("CosmosSdk".to_owned()));
     chain.insert(
         "rpc_addr".to_owned(),
-        Value::String(format!("http://127.0.0.1:26657")),
+        Value::String(format!("http://{}", setup::constants::GAIA_RPC)),
     );
     chain.insert(
         "grpc_addr".to_owned(),
@@ -670,11 +670,13 @@ pub fn update_gaia_config(test: &Test) -> Result<()> {
     let mut values = s
         .parse::<toml::Value>()
         .expect("Parsing Gaia config failed");
-    if let Some(timeout_commit) = values
-        .get_mut("consensus")
-        .and_then(|v| v.get_mut("timeout_commit"))
-    {
-        *timeout_commit = "1s".into();
+    if let Some(consensus) = values.get_mut("consensus") {
+        if let Some(timeout_commit) = consensus.get_mut("timeout_commit") {
+            *timeout_commit = "1s".into();
+        }
+        if let Some(timeout_propose) = consensus.get_mut("timeout_propose") {
+            *timeout_propose = "1s".into();
+        }
     }
     let mut file = OpenOptions::new()
         .write(true)

@@ -1438,7 +1438,7 @@ pub mod constants {
     pub const KARTOFFEL: &str = "Kartoffel";
 
     // Gaia
-    pub const GAIA_RPC: &str = "tcp://127.0.0.1:26657";
+    pub const GAIA_RPC: &str = "127.0.0.1:26657";
     pub const GAIA_CHAIN_ID: &str = "gaia";
     pub const GAIA_USER: &str = "user";
     pub const GAIA_RELAYER: &str = "relayer";
