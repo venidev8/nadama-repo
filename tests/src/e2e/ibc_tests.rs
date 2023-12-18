@@ -310,8 +310,8 @@ fn ibc_namada_gaia_with_hermes() -> Result<()> {
     let hermes = run_hermes(&test)?;
     let _bg_hermes = hermes.background();
 
-    let receiver = find_gaia_address(&test, GAIA_USER)?;
     // Transfer from Namada to Gaia
+    let receiver = find_gaia_address(&test, GAIA_USER)?;
     transfer(
         &test,
         ALBERT,
@@ -366,7 +366,53 @@ fn ibc_namada_gaia_with_hermes() -> Result<()> {
 
     // Check the token on Namada
     let ibc_denom = format!("{port_id_namada}/{channel_id_namada}/{GAIA_COIN}");
-    check_balance(&test, ALBERT, ibc_denom, 200)?;
+    check_balance(&test, ALBERT, &ibc_denom, 200)?;
+
+    // Transfer back from Namada to Gaia
+    let receiver = find_gaia_address(&test, GAIA_USER)?;
+    transfer(
+        &test,
+        ALBERT,
+        receiver,
+        ibc_denom,
+        "100",
+        ALBERT_KEY,
+        &port_id_namada,
+        &channel_id_namada,
+        None,
+        None,
+        None,
+        false,
+    )?;
+    wait_for_packet_relay(&port_id_namada, &channel_id_namada, &test)?;
+
+    // Check the received token on Gaia
+    check_gaia_balance(&test, GAIA_USER, GAIA_COIN, 900)?;
+
+    // Shielded transfer from Gaia to Namada
+    let memo_path = get_masp_proof(
+        &test,
+        AA_PAYMENT_ADDRESS,
+        GAIA_COIN,
+        10,
+        &port_id_namada,
+        &channel_id_namada,
+    )?;
+    transfer_from_gaia(
+        &test,
+        GAIA_USER,
+        AA_PAYMENT_ADDRESS,
+        GAIA_COIN,
+        "10",
+        &port_id_gaia,
+        &channel_id_gaia,
+        Some(memo_path),
+    )?;
+    wait_for_packet_relay(&port_id_gaia, &channel_id_gaia, &test)?;
+
+    // Check the token on Namada
+    let ibc_denom = format!("{port_id_namada}/{channel_id_namada}/{GAIA_COIN}");
+    check_balance(&test, AA_VIEWING_KEY, ibc_denom, 10)?;
 
     Ok(())
 }
@@ -1292,32 +1338,14 @@ fn shielded_transfer(
 ) -> Result<()> {
     // Get masp proof for the following IBC transfer from the destination chain
     // It will send 10 BTC from Chain A to PA(B) on Chain B
-    let rpc_b = get_actor_rpc(test_b, &Who::Validator(0));
-    // Chain B will receive Chain A's BTC
-    std::env::set_var(ENV_VAR_CHAIN_ID, test_a.net.chain_id.to_string());
-    let output_folder = test_b.test_dir.path().to_string_lossy();
-    let amount = Amount::native_whole(10).to_string_native();
-    let args = [
-        "ibc-gen-shielded",
-        "--output-folder-path",
-        &output_folder,
-        "--target",
+    let memo_path = get_masp_proof(
+        test_b,
         AB_PAYMENT_ADDRESS,
-        "--token",
         BTC,
-        "--amount",
-        &amount,
-        "--port-id",
-        port_id_b.as_ref(),
-        "--channel-id",
-        channel_id_b.as_ref(),
-        "--node",
-        &rpc_b,
-    ];
-    std::env::set_var(ENV_VAR_CHAIN_ID, test_b.net.chain_id.to_string());
-    let mut client = run!(test_b, Bin::Client, args, Some(120))?;
-    let file_path = get_shielded_transfer_path(&mut client)?;
-    client.assert_success();
+        10,
+        port_id_b,
+        channel_id_b,
+    )?;
 
     // Send a token from Chain A to PA(B) on Chain B
     let amount = Amount::native_whole(10).to_string_native();
@@ -1330,7 +1358,7 @@ fn shielded_transfer(
         ALBERT_KEY,
         port_id_a,
         channel_id_a,
-        Some(&file_path.to_string_lossy()),
+        Some(&memo_path.to_string_lossy()),
         None,
         None,
         false,
@@ -1380,6 +1408,42 @@ fn shielded_transfer(
     submit_ibc_tx(test_a, msg, ALBERT, ALBERT_KEY, false)?;
 
     Ok(())
+}
+
+/// Get masp proof for the following IBC transfer from the destination chain
+fn get_masp_proof(
+    dest_test: &Test,
+    receiver: impl AsRef<str>,
+    token: impl AsRef<str>,
+    amount: u64,
+    dest_port_id: &PortId,
+    dest_channel_id: &ChannelId,
+) -> Result<PathBuf> {
+    std::env::set_var(ENV_VAR_CHAIN_ID, dest_test.net.chain_id.to_string());
+    let rpc = get_actor_rpc(dest_test, &Who::Validator(0));
+    let output_folder = dest_test.test_dir.path().to_string_lossy();
+    let args = [
+        "ibc-gen-shielded",
+        "--output-folder-path",
+        &output_folder,
+        "--target",
+        receiver.as_ref(),
+        "--token",
+        token.as_ref(),
+        "--amount",
+        &amount.to_string(),
+        "--port-id",
+        dest_port_id.as_ref(),
+        "--channel-id",
+        dest_channel_id.as_ref(),
+        "--node",
+        &rpc,
+    ];
+    let mut client = run!(dest_test, Bin::Client, args, Some(120))?;
+    let file_path = get_shielded_transfer_path(&mut client)?;
+    client.assert_success();
+
+    Ok(file_path)
 }
 
 fn get_shielded_transfer_path(client: &mut NamadaCmd) -> Result<PathBuf> {
@@ -1557,7 +1621,7 @@ fn transfer_from_gaia(
     amount: impl AsRef<str>,
     port_id: &PortId,
     channel_id: &ChannelId,
-    memo: Option<&str>,
+    memo_path: Option<PathBuf>,
 ) -> Result<()> {
     let port_id = port_id.to_string();
     let channel_id = channel_id.to_string();
@@ -1582,7 +1646,7 @@ fn transfer_from_gaia(
         "--yes",
     ];
 
-    let memo_str = match memo {
+    let memo_str = match memo_path {
         Some(memo_path) => std::fs::read_to_string(memo_path)
             .expect("Reading a memo file failed"),
         None => String::default(),
@@ -1749,7 +1813,7 @@ fn check_balance(
 ) -> Result<()> {
     std::env::set_var(ENV_VAR_CHAIN_ID, test.net.chain_id.to_string());
     let rpc = get_actor_rpc(test, &Who::Validator(0));
-    let query_args = vec![
+    let mut query_args = vec![
         "balance",
         "--owner",
         owner.as_ref(),
@@ -1758,6 +1822,10 @@ fn check_balance(
         "--node",
         &rpc,
     ];
+    if owner.as_ref().starts_with("zvknam") {
+        // viewing key
+        query_args.push("--no-conversions");
+    }
     let mut client = run!(test, Bin::Client, query_args, Some(40))?;
     let expected =
         format!("{}: {expected_amount}", token.as_ref().to_lowercase());
@@ -1789,7 +1857,12 @@ fn check_gaia_balance(
     ];
     let mut gaia = run_gaia_cmd(test, args, Some(40))?;
     gaia.exp_string(&format!("amount: \"{expected_amount}\""))?;
-    gaia.exp_string(&format!("denom: {}", get_gaia_denom_hash(denom)))?;
+    let expected_denom = if denom.as_ref().contains('/') {
+        get_gaia_denom_hash(denom)
+    } else {
+        denom.as_ref().to_string()
+    };
+    gaia.exp_string(&format!("denom: {expected_denom}"))?;
     Ok(())
 }
 
