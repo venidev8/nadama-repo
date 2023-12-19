@@ -4193,6 +4193,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "namada_account"
+version = "0.28.1"
+dependencies = [
+ "namada_core",
+]
+
+[[package]]
 name = "namada_apps"
 version = "0.28.1"
 dependencies = [
