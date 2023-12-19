@@ -4197,6 +4197,8 @@ name = "namada_account"
 version = "0.28.1"
 dependencies = [
  "namada_core",
+ "namada_macros",
+ "namada_storage",
 ]
 
 [[package]]
