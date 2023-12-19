@@ -4617,6 +4617,7 @@ name = "namada_trans_token"
 version = "0.28.1"
 dependencies = [
  "namada_core",
+ "namada_storage",
 ]
 
 [[package]]
