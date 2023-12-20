@@ -64,22 +64,6 @@ impl Display for ProposalType {
     }
 }
 
-impl TryFrom<StewardsUpdate> for HashSet<AddRemove<Address>> {
-    type Error = ProposalTypeError;
-
-    fn try_from(value: StewardsUpdate) -> Result<Self, Self::Error> {
-        let mut data = HashSet::default();
-
-        if value.add.is_some() {
-            data.insert(AddRemove::Add(value.add.unwrap()));
-        }
-        for steward in value.remove {
-            data.insert(AddRemove::Remove(steward));
-        }
-        Ok(data)
-    }
-}
-
 impl TryFrom<PgfSteward> for AddRemove<Address> {
     type Error = ProposalTypeError;
 
