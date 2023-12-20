@@ -4416,8 +4416,11 @@ dependencies = [
 name = "namada_gas"
 version = "0.28.1"
 dependencies = [
+ "borsh",
  "namada_core",
  "namada_parameters",
+ "namada_storage",
+ "thiserror",
 ]
 
 [[package]]
