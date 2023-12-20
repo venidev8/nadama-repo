@@ -3,14 +3,14 @@ pub mod storage;
 
 use std::collections::BTreeMap;
 
-use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
-use namada_core::storage_api::{self, ResultExt, StorageRead, StorageWrite};
+use namada_core::borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use namada_core::types::address::{Address, InternalAddress};
 use namada_core::types::chain::ProposalBytes;
 use namada_core::types::dec::Dec;
 use namada_core::types::hash::Hash;
 use namada_core::types::time::DurationSecs;
 use namada_core::types::token;
+use namada_storage::{self, ResultExt, StorageRead, StorageWrite};
 use thiserror::Error;
 
 /// The internal address for storage keys representing parameters than
@@ -88,9 +88,9 @@ pub struct EpochDuration {
 #[derive(Error, Debug)]
 pub enum ReadError {
     #[error("Storage error: {0}")]
-    StorageError(namada_state::Error),
+    StorageError(namada_storage::Error),
     #[error("Storage type error: {0}")]
-    StorageTypeError(namada_state::types::Error),
+    StorageTypeError(namada_core::types::storage::Error),
     #[error("Protocol parameters are missing, they must be always set")]
     ParametersMissing,
 }
@@ -99,14 +99,14 @@ pub enum ReadError {
 #[derive(Error, Debug)]
 pub enum WriteError {
     #[error("Storage error: {0}")]
-    StorageError(namada_state::Error),
+    StorageError(namada_storage::Error),
     #[error("Serialize error: {0}")]
     SerializeError(String),
 }
 
 impl Parameters {
     /// Initialize parameters in storage in the genesis block.
-    pub fn init_storage<S>(&self, storage: &mut S) -> storage_api::Result<()>
+    pub fn init_storage<S>(&self, storage: &mut S) -> namada_storage::Result<()>
     where
         S: StorageRead + StorageWrite,
     {
@@ -214,7 +214,7 @@ impl Parameters {
 /// Get the max signatures per transactio parameter
 pub fn max_signatures_per_transaction<S>(
     storage: &S,
-) -> storage_api::Result<Option<u8>>
+) -> namada_storage::Result<Option<u8>>
 where
     S: StorageRead,
 {
@@ -227,7 +227,7 @@ where
 pub fn update_max_expected_time_per_block_parameter<S>(
     storage: &mut S,
     value: &DurationSecs,
-) -> storage_api::Result<()>
+) -> namada_storage::Result<()>
 where
     S: StorageRead + StorageWrite,
 {
@@ -240,7 +240,7 @@ where
 pub fn update_vp_whitelist_parameter<S>(
     storage: &mut S,
     value: Vec<String>,
-) -> storage_api::Result<()>
+) -> namada_storage::Result<()>
 where
     S: StorageRead + StorageWrite,
 {
@@ -259,7 +259,7 @@ where
 pub fn update_tx_whitelist_parameter<S>(
     storage: &mut S,
     value: Vec<String>,
-) -> storage_api::Result<()>
+) -> namada_storage::Result<()>
 where
     S: StorageRead + StorageWrite,
 {
@@ -278,7 +278,7 @@ where
 pub fn update_epoch_parameter<S>(
     storage: &mut S,
     value: &EpochDuration,
-) -> storage_api::Result<()>
+) -> namada_storage::Result<()>
 where
     S: StorageRead + StorageWrite,
 {
@@ -291,7 +291,7 @@ where
 pub fn update_epochs_per_year_parameter<S>(
     storage: &mut S,
     value: &u64,
-) -> storage_api::Result<()>
+) -> namada_storage::Result<()>
 where
     S: StorageRead + StorageWrite,
 {
@@ -304,7 +304,7 @@ where
 pub fn update_staked_ratio_parameter<S>(
     storage: &mut S,
     value: &Dec,
-) -> storage_api::Result<()>
+) -> namada_storage::Result<()>
 where
     S: StorageRead + StorageWrite,
 {
@@ -317,7 +317,7 @@ where
 pub fn update_pos_inflation_amount_parameter<S>(
     storage: &mut S,
     value: &u64,
-) -> storage_api::Result<()>
+) -> namada_storage::Result<()>
 where
     S: StorageRead + StorageWrite,
 {
@@ -329,7 +329,7 @@ where
 pub fn update_implicit_vp<S>(
     storage: &mut S,
     implicit_vp: &[u8],
-) -> storage_api::Result<()>
+) -> namada_storage::Result<()>
 where
     S: StorageRead + StorageWrite,
 {
@@ -343,7 +343,7 @@ where
 pub fn update_max_signature_per_tx<S>(
     storage: &mut S,
     value: u8,
-) -> storage_api::Result<()>
+) -> namada_storage::Result<()>
 where
     S: StorageRead + StorageWrite,
 {
@@ -356,7 +356,7 @@ where
 /// Read the the epoch duration parameter from store
 pub fn read_epoch_duration_parameter<S>(
     storage: &S,
-) -> storage_api::Result<EpochDuration>
+) -> namada_storage::Result<EpochDuration>
 where
     S: StorageRead,
 {
@@ -372,7 +372,7 @@ where
 pub fn read_gas_cost<S>(
     storage: &S,
     token: &Address,
-) -> storage_api::Result<Option<token::Amount>>
+) -> namada_storage::Result<Option<token::Amount>>
 where
     S: StorageRead,
 {
@@ -385,7 +385,7 @@ where
 
 /// Read all the parameters from storage. Returns the parameters and gas
 /// cost.
-pub fn read<S>(storage: &S) -> storage_api::Result<Parameters>
+pub fn read<S>(storage: &S) -> namada_storage::Result<Parameters>
 where
     S: StorageRead,
 {
@@ -523,7 +523,7 @@ where
 pub fn validate_tx_bytes<S>(
     storage: &S,
     tx_size: usize,
-) -> storage_api::Result<bool>
+) -> namada_storage::Result<bool>
 where
     S: StorageRead,
 {
