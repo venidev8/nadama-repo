@@ -16,9 +16,7 @@ use namada_core::borsh::{
 };
 use namada_core::types::address::Address;
 use namada_core::types::chain::ChainId;
-use namada_core::types::hash::{KeccakHasher, Sha256Hasher, StorageHasher};
-use namada_core::types::keccak::{keccak_hash, KeccakHash};
-use namada_core::types::key::{self, AccountPublicKeysMap, *};
+use namada_core::types::key::{AccountPublicKeysMap, *};
 use namada_core::types::storage::Epoch;
 use namada_core::types::time::DateTimeUtc;
 use namada_core::types::token::MaspDenom;
@@ -30,6 +28,16 @@ use thiserror::Error;
 use crate::data::protocol::ProtocolTx;
 use crate::data::{hash_tx, DecryptedTx, Fee, GasLimit, TxType, WrapperTx};
 use crate::proto;
+
+/// Represents an error in signature verification
+#[allow(missing_docs)]
+#[derive(Error, Debug)]
+pub enum VerifySigError {
+    #[error("{0}")]
+    VerifySig(#[from] namada_core::types::key::VerifySigError),
+    #[error("{0}")]
+    Gas(#[from] namada_gas::Error),
+}
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -165,6 +173,7 @@ impl<T, S: Signable<T>> Signed<T, S> {
             &signed_bytes,
             &self.sig,
         )
+        .map_err(Into::into)
     }
 }
 
@@ -190,6 +199,7 @@ pub fn verify_standalone_sig<T, S: Signable<T>>(
         &signed_data,
         sig,
     )
+    .map_err(Into::into)
 }
 
 /// A section representing transaction data

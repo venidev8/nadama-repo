@@ -170,9 +170,7 @@ pub mod wrapper_tx {
         // Derive a Gas instance with a sub amount which is exaclty a whole
         // amount since the limit represents gas in whole units
         fn from(value: GasLimit) -> Self {
-            Self {
-                sub: u64::from(value) * namada_gas::SCALE,
-            }
+            Self::from_whole_units(u64::from(value))
         }
     }
 

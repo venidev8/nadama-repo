@@ -14,13 +14,6 @@ use crate::cli::onchain::{
 };
 use crate::utils::{ProposalStatus, TallyType};
 
-#[allow(missing_docs)]
-#[derive(Debug, Error)]
-pub enum ProposalTypeError {
-    #[error("Invalid proposal type.")]
-    InvalidProposalType,
-}
-
 /// Storage struture for pgf fundings
 #[derive(
     Debug,
