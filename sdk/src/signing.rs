@@ -38,9 +38,7 @@ use tokio::sync::RwLock;
 use super::masp::{ShieldedContext, ShieldedTransfer};
 use crate::args::SdkTypes;
 use crate::core::ledger::governance::storage::proposal::ProposalType;
-use crate::core::ledger::governance::storage::vote::{
-    StorageProposalVote, VoteType,
-};
+use crate::core::ledger::governance::storage::vote::StorageProposalVote;
 use crate::error::{EncodingError, Error, TxError};
 use crate::ibc::apps::transfer::types::msgs::transfer::MsgTransfer;
 use crate::ibc::primitives::proto::Any;
@@ -964,14 +962,7 @@ struct LedgerProposalVote<'a>(&'a StorageProposalVote);
 impl<'a> Display for LedgerProposalVote<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.0 {
-            StorageProposalVote::Yay(vote_type) => match vote_type {
-                VoteType::Default => write!(f, "yay"),
-                VoteType::PGFSteward => write!(f, "yay for PGF steward"),
-                VoteType::PGFPayment => {
-                    write!(f, "yay for PGF payment proposal")
-                }
-            },
-
+            StorageProposalVote::Yay => write!(f, "yay"),
             StorageProposalVote::Nay => write!(f, "nay"),
             StorageProposalVote::Abstain => write!(f, "abstain"),
         }
