@@ -5,7 +5,7 @@ use std::str::FromStr;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use namada::core::ledger::governance::storage::proposal::ProposalType;
-use namada::core::ledger::governance::storage::vote::StorageProposalVote;
+use namada::core::ledger::governance::storage::vote::ProposalVote;
 use namada::core::ledger::ibc::{IbcActions, TransferModule};
 use namada::core::ledger::pgf::storage::steward::StewardDetail;
 use namada::core::ledger::storage_api::{StorageRead, StorageWrite};
@@ -79,7 +79,7 @@ fn governance(c: &mut Criterion) {
                     TX_VOTE_PROPOSAL_WASM,
                     VoteProposalData {
                         id: 0,
-                        vote: StorageProposalVote::Yay,
+                        vote: ProposalVote::Yay,
                         voter: defaults::albert_address(),
                         delegations: vec![defaults::validator_address()],
                     },
@@ -95,7 +95,7 @@ fn governance(c: &mut Criterion) {
                     TX_VOTE_PROPOSAL_WASM,
                     VoteProposalData {
                         id: 0,
-                        vote: StorageProposalVote::Nay,
+                        vote: ProposalVote::Nay,
                         voter: defaults::validator_address(),
                         delegations: vec![],
                     },

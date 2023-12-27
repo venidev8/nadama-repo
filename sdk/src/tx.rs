@@ -25,10 +25,9 @@ use namada_core::ibc::core::host::types::identifiers::{ChannelId, PortId};
 use namada_core::ibc::primitives::{Msg, Timestamp as IbcTimestamp};
 use namada_core::ledger::governance::cli::onchain::{
     DefaultProposal, OnChainProposal, PgfFundingProposal, PgfStewardProposal,
-    ProposalVote,
 };
 use namada_core::ledger::governance::storage::proposal::ProposalType;
-use namada_core::ledger::governance::storage::vote::StorageProposalVote;
+use namada_core::ledger::governance::storage::vote::ProposalVote;
 use namada_core::ledger::ibc::storage::channel_key;
 use namada_core::ledger::pgf::cli::steward::Commission;
 use namada_core::types::address::{Address, InternalAddress, MASP};
@@ -1778,8 +1777,6 @@ pub async fn build_vote_proposal(
         return Err(Error::from(TxError::ProposalDoesNotExist(proposal_id)));
     };
 
-    let storage_vote = StorageProposalVote::from(&proposal_vote);
-
     let is_validator = rpc::is_validator(context.client(), voter).await?;
 
     if !proposal.can_be_voted(epoch, is_validator) {
@@ -1810,7 +1807,7 @@ pub async fn build_vote_proposal(
 
     let data = VoteProposalData {
         id: proposal_id,
-        vote: storage_vote,
+        vote: proposal_vote,
         voter: voter.clone(),
         delegations,
     };

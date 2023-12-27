@@ -3,8 +3,6 @@ use std::fmt::Display;
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 
-use super::super::cli::onchain::ProposalVote;
-
 #[derive(
     Debug,
     Clone,
@@ -16,7 +14,7 @@ use super::super::cli::onchain::ProposalVote;
     Deserialize,
 )]
 /// The vote for a proposal
-pub enum StorageProposalVote {
+pub enum ProposalVote {
     /// Yes
     Yay,
     /// No
@@ -25,39 +23,42 @@ pub enum StorageProposalVote {
     Abstain,
 }
 
-impl StorageProposalVote {
+impl ProposalVote {
     /// Check if a vote is yay
     pub fn is_yay(&self) -> bool {
-        matches!(self, StorageProposalVote::Yay)
+        matches!(self, ProposalVote::Yay)
     }
 
     /// Check if a vote is nay
     pub fn is_nay(&self) -> bool {
-        matches!(self, StorageProposalVote::Nay)
+        matches!(self, ProposalVote::Nay)
     }
 
     /// Check if a vote is abstain
     pub fn is_abstain(&self) -> bool {
-        matches!(self, StorageProposalVote::Abstain)
+        matches!(self, ProposalVote::Abstain)
     }
 }
 
-impl From<&ProposalVote> for StorageProposalVote {
-    fn from(value: &ProposalVote) -> Self {
-        match value {
-            ProposalVote::Yay => StorageProposalVote::Yay,
-            ProposalVote::Nay => StorageProposalVote::Nay,
-            ProposalVote::Abstain => StorageProposalVote::Abstain,
+impl Display for ProposalVote {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ProposalVote::Yay => write!(f, "yay"),
+            ProposalVote::Nay => write!(f, "nay"),
+            ProposalVote::Abstain => write!(f, "abstain"),
         }
     }
 }
 
-impl Display for StorageProposalVote {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            StorageProposalVote::Yay => write!(f, "yay"),
-            StorageProposalVote::Nay => write!(f, "nay"),
-            StorageProposalVote::Abstain => write!(f, "abstain"),
+impl TryFrom<String> for ProposalVote {
+    type Error = String;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        match value.trim().to_lowercase().as_str() {
+            "yay" => Ok(ProposalVote::Yay),
+            "nay" => Ok(ProposalVote::Nay),
+            "abstain" => Ok(ProposalVote::Abstain),
+            _ => Err("invalid vote".to_string()),
         }
     }
 }
