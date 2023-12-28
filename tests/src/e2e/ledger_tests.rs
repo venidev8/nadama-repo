@@ -2008,8 +2008,8 @@ fn proposal_submission() -> Result<()> {
     // this is valid because the client filter ALBERT delegation and there are
     // none
     let mut client = run!(test, Bin::Client, submit_proposal_vote, Some(15))?;
-    client.exp_string("Transaction is valid.")?;
-    client.assert_success();
+    client.exp_string("Voter address must have delegations")?;
+    client.assert_failure();
 
     // 11. Query the proposal and check the result
     let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
@@ -2029,7 +2029,9 @@ fn proposal_submission() -> Result<()> {
     let mut client = run!(test, Bin::Client, query_proposal, Some(15))?;
     client.exp_string("Proposal Id: 0")?;
     client.exp_string(
-        "passed with 100000.000000 yay votes and 900.000000 nay votes (0.%)",
+        "passed with 100000.000000 yay votes, 900.000000 nay votes and \
+         0.000000 abstain votes, total voting power: 100900.000000 threshold \
+         was: 67266.666666",
     )?;
     client.assert_success();
 
