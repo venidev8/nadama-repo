@@ -60,11 +60,15 @@ fn asset_type_from_epoched_address(
     epoch: Epoch,
     token: &Address,
     denom: token::MaspDenom,
-) -> AssetType {
+) -> Result<AssetType> {
     // Timestamp the chosen token with the current epoch
     let token_bytes = (token, denom, epoch.0).serialize_to_vec();
     // Generate the unique asset identifier from the unique token address
-    AssetType::new(token_bytes.as_ref()).expect("unable to create asset type")
+    AssetType::new(token_bytes.as_ref()).map_err(|()| {
+        Error::NativeVpError(native_vp::Error::SimpleMessage(
+            "Unable to create asset type",
+        ))
+    })
 }
 
 /// Checks if the asset type matches the expected asset type, Adds a
@@ -108,13 +112,17 @@ fn convert_amount(
     token: &Address,
     val: token::Amount,
     denom: token::MaspDenom,
-) -> (AssetType, I128Sum) {
-    let asset_type = asset_type_from_epoched_address(epoch, token, denom);
+) -> Result<(AssetType, I128Sum)> {
+    let asset_type = asset_type_from_epoched_address(epoch, token, denom)?;
     // Combine the value and unit into one amount
     let amount =
         I128Sum::from_nonnegative(asset_type, denom.denominate(&val) as i128)
-            .expect("invalid value or asset type for amount");
-    (asset_type, amount)
+            .map_err(|()| {
+            Error::NativeVpError(native_vp::Error::SimpleMessage(
+                "Invalid value or asset type for amount",
+            ))
+        })?;
+    Ok((asset_type, amount))
 }
 
 impl<'a, DB, H, CA> MaspVp<'a, DB, H, CA>
@@ -421,7 +429,7 @@ where
                     &transfer.token,
                     transfer.amount.into(),
                     denom,
-                );
+                )?;
 
                 // Non-masp sources add to transparent tx pool
                 transparent_tx_pool += transp_amt;
@@ -509,7 +517,7 @@ where
                         epoch,
                         &transfer.token,
                         denom,
-                    );
+                    )?;
 
                 // Satisfies 2. and 3.
                 if !valid_asset_type(&expected_asset_type, &out.asset_type) {
@@ -530,7 +538,7 @@ where
                     &transfer.token,
                     transfer.amount.amount,
                     denom,
-                );
+                )?;
 
                 // Non-masp destinations subtract from transparent tx pool
                 transparent_tx_pool -= transp_amt;
