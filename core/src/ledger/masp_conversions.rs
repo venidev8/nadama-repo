@@ -19,8 +19,6 @@ use crate::ledger::storage_api::{StorageRead, StorageWrite};
 use crate::types::address::{Address, MASP};
 use crate::types::dec::Dec;
 use crate::types::storage::Epoch;
-#[cfg(feature = "wasm-runtime")]
-use crate::types::storage::{Key, KeySeg};
 use crate::types::token;
 use crate::types::token::MaspDenom;
 use crate::types::uint::Uint;
@@ -215,7 +213,6 @@ where
     use rayon::prelude::ParallelSlice;
 
     use crate::types::address;
-    use crate::types::token::MASP_CONVERT_ANCHOR_KEY;
 
     // The derived conversions will be placed in MASP address space
     let masp_addr = MASP;
@@ -460,11 +457,8 @@ where
     wl_storage.storage.conversion_state.tree =
         FrozenCommitmentTree::merge(&tree_parts);
     // Update the anchor in storage
-    let anchor_key = Key::from(MASP.to_db_key())
-        .push(&MASP_CONVERT_ANCHOR_KEY.to_owned())
-        .expect("Cannot obtain a storage key");
     wl_storage.write(
-        &anchor_key,
+        &crate::types::token::masp_convert_anchor_key(),
         crate::types::hash::Hash(
             bls12_381::Scalar::from(
                 wl_storage.storage.conversion_state.tree.root(),
