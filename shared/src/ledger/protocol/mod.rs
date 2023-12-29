@@ -34,7 +34,6 @@ use crate::ledger::storage_api;
 use crate::proto::{self, Tx};
 use crate::types::address::{Address, InternalAddress};
 use crate::types::storage;
-use crate::types::storage::TxIndex;
 use crate::types::transaction::protocol::{EthereumTxData, ProtocolTxType};
 use crate::types::transaction::{DecryptedTx, TxResult, TxType, VpsResult};
 use crate::vm::wasm::{TxCache, VpCache};
@@ -145,7 +144,6 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub fn dispatch_tx<'a, D, H, CA>(
     tx: Tx,
     tx_bytes: &'a [u8],
-    tx_index: TxIndex,
     tx_gas_meter: &'a mut TxGasMeter,
     wl_storage: &'a mut WlStorage<D, H>,
     vp_wasm_cache: &'a mut VpCache<CA>,
@@ -161,7 +159,6 @@ where
         TxType::Raw => Err(Error::TxTypeError),
         TxType::Decrypted(DecryptedTx::Decrypted) => apply_wasm_tx(
             tx,
-            &tx_index,
             ShellParams {
                 tx_gas_meter,
                 wl_storage,
@@ -338,7 +335,6 @@ where
                 wl_storage.write_log_mut().precommit_tx();
                 match apply_wasm_tx(
                     fee_unshielding_tx,
-                    &TxIndex::default(),
                     ShellParams {
                         tx_gas_meter: &mut tx_gas_meter,
                         wl_storage: *wl_storage,
@@ -539,7 +535,6 @@ where
 /// validity predicates will be triggered in the normal way.
 pub fn apply_wasm_tx<'a, D, H, CA, WLS>(
     tx: Tx,
-    tx_index: &TxIndex,
     shell_params: ShellParams<'a, CA, WLS>,
 ) -> Result<TxResult>
 where
@@ -575,7 +570,6 @@ where
 
     let verifiers = execute_tx(
         &tx,
-        tx_index,
         storage,
         tx_gas_meter,
         write_log,
@@ -585,7 +579,6 @@ where
 
     let vps_result = check_vps(CheckVps {
         tx: &tx,
-        tx_index,
         storage,
         tx_gas_meter,
         write_log,
@@ -687,7 +680,6 @@ where
 #[allow(clippy::too_many_arguments)]
 fn execute_tx<D, H, CA>(
     tx: &Tx,
-    tx_index: &TxIndex,
     storage: &Storage<D, H>,
     tx_gas_meter: &mut TxGasMeter,
     write_log: &mut WriteLog,
@@ -703,7 +695,6 @@ where
         storage,
         write_log,
         tx_gas_meter,
-        tx_index,
         tx,
         vp_wasm_cache,
         tx_wasm_cache,
@@ -723,7 +714,6 @@ where
     CA: 'static + WasmCacheAccess + Sync,
 {
     tx: &'a Tx,
-    tx_index: &'a TxIndex,
     storage: &'a Storage<D, H>,
     tx_gas_meter: &'a mut TxGasMeter,
     write_log: &'a WriteLog,
@@ -735,7 +725,6 @@ where
 fn check_vps<D, H, CA>(
     CheckVps {
         tx,
-        tx_index,
         storage,
         tx_gas_meter,
         write_log,
@@ -755,7 +744,6 @@ where
         verifiers,
         keys_changed,
         tx,
-        tx_index,
         storage,
         write_log,
         tx_gas_meter,
@@ -776,7 +764,6 @@ fn execute_vps<D, H, CA>(
     verifiers: BTreeSet<Address>,
     keys_changed: BTreeSet<storage::Key>,
     tx: &Tx,
-    tx_index: &TxIndex,
     storage: &Storage<D, H>,
     write_log: &WriteLog,
     tx_gas_meter: &TxGasMeter,
@@ -811,7 +798,6 @@ where
                     wasm::run::vp(
                         vp_code_hash,
                         tx,
-                        tx_index,
                         addr,
                         storage,
                         write_log,
@@ -834,7 +820,6 @@ where
                         storage,
                         write_log,
                         tx,
-                        tx_index,
                         gas_meter,
                         &keys_changed,
                         &verifiers,

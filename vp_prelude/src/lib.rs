@@ -29,7 +29,7 @@ use namada_core::types::chain::CHAIN_ID_LENGTH;
 use namada_core::types::hash::{Hash, HASH_LENGTH};
 use namada_core::types::internal::HostEnvResult;
 use namada_core::types::storage::{
-    BlockHash, BlockHeight, Epoch, Header, TxIndex, BLOCK_HASH_LENGTH,
+    BlockHash, BlockHeight, Epoch, Header, BLOCK_HASH_LENGTH,
 };
 pub use namada_core::types::*;
 pub use namada_macros::validity_predicate;
@@ -287,10 +287,6 @@ impl<'view> VpEnv<'view> for Ctx {
         get_block_epoch()
     }
 
-    fn get_tx_index(&self) -> Result<TxIndex, Error> {
-        get_tx_index()
-    }
-
     fn get_native_token(&self) -> Result<Address, Error> {
         // Both `CtxPreStorageRead` and `CtxPostStorageRead` have the same impl
         get_native_token()
@@ -417,10 +413,6 @@ impl StorageRead for CtxPreStorageRead<'_> {
         get_block_epoch()
     }
 
-    fn get_tx_index(&self) -> Result<TxIndex, storage_api::Error> {
-        get_tx_index()
-    }
-
     fn get_native_token(&self) -> Result<Address, Error> {
         get_native_token()
     }
@@ -485,10 +477,6 @@ impl StorageRead for CtxPostStorageRead<'_> {
 
     fn get_block_epoch(&self) -> Result<Epoch, Error> {
         get_block_epoch()
-    }
-
-    fn get_tx_index(&self) -> Result<TxIndex, storage_api::Error> {
-        get_tx_index()
     }
 
     fn get_native_token(&self) -> Result<Address, Error> {
@@ -556,10 +544,6 @@ fn get_block_hash() -> Result<BlockHash, Error> {
 
 fn get_block_epoch() -> Result<Epoch, Error> {
     Ok(Epoch(unsafe { namada_vp_get_block_epoch() }))
-}
-
-fn get_tx_index() -> Result<TxIndex, storage_api::Error> {
-    Ok(TxIndex(unsafe { namada_vp_get_tx_index() }))
 }
 
 fn get_native_token() -> Result<Address, Error> {

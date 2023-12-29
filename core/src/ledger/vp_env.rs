@@ -9,9 +9,7 @@ use crate::proto::Tx;
 use crate::types::address::Address;
 use crate::types::hash::Hash;
 use crate::types::ibc::{get_shielded_transfer, IbcEvent, EVENT_TYPE_PACKET};
-use crate::types::storage::{
-    BlockHash, BlockHeight, Epoch, Header, Key, TxIndex,
-};
+use crate::types::storage::{BlockHash, BlockHeight, Epoch, Header, Key};
 use crate::types::token::Transfer;
 
 /// Validity predicate's environment is available for native VPs and WASM VPs
@@ -71,9 +69,6 @@ where
     /// Getting the block epoch. The epoch is that of the block to which the
     /// current transaction is being applied.
     fn get_block_epoch(&self) -> Result<Epoch, storage_api::Error>;
-
-    /// Get the shielded transaction index.
-    fn get_tx_index(&self) -> Result<TxIndex, storage_api::Error>;
 
     /// Get the address of the native token.
     fn get_native_token(&self) -> Result<Address, storage_api::Error>;

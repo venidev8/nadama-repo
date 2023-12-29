@@ -510,12 +510,6 @@ where
         Ok(self.storage().block.epoch)
     }
 
-    fn get_tx_index(
-        &self,
-    ) -> std::result::Result<storage::TxIndex, storage_api::Error> {
-        Ok(self.storage().tx_index)
-    }
-
     fn get_native_token(&self) -> storage_api::Result<Address> {
         Ok(self.storage().native_token.clone())
     }

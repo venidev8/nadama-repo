@@ -186,7 +186,6 @@ mod tests {
     use crate::types::address::{nam, wnam};
     use crate::types::ethereum_events;
     use crate::types::ethereum_events::EthAddress;
-    use crate::types::storage::TxIndex;
     use crate::types::token::minted_balance_key;
     use crate::types::transaction::TxType;
     use crate::vm::wasm::VpCache;
@@ -255,7 +254,6 @@ mod tests {
             storage,
             write_log,
             tx,
-            &TxIndex(0),
             VpGasMeter::new_from_tx_meter(&TxGasMeter::new_from_sub_limit(
                 u64::MAX.into(),
             )),

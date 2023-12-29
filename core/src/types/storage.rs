@@ -53,8 +53,6 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 /// The length of the block's hash string
 pub const BLOCK_HASH_LENGTH: usize = 32;
-/// The length of the transaction index
-pub const TX_INDEX_LENGTH: usize = 4;
 /// The length of the block height
 pub const BLOCK_HEIGHT_LENGTH: usize = 8;
 /// The length of the epoch type

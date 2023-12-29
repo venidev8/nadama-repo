@@ -13,9 +13,7 @@ use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::ledger::storage_api::{self, StorageRead, StorageWrite};
 use crate::types::address::{Address, InternalAddress};
 use crate::types::ibc::IbcEvent;
-use crate::types::storage::{
-    BlockHash, BlockHeight, Epoch, Header, Key, TxIndex,
-};
+use crate::types::storage::{BlockHash, BlockHeight, Epoch, Header, Key};
 use crate::types::token::{self, Amount, DenominatedAmount};
 use crate::vm::WasmCacheAccess;
 
@@ -130,10 +128,6 @@ where
 
     fn get_block_epoch(&self) -> Result<Epoch> {
         self.ctx.get_block_epoch()
-    }
-
-    fn get_tx_index(&self) -> Result<TxIndex> {
-        self.ctx.get_tx_index()
     }
 
     fn get_native_token(&self) -> Result<Address> {
@@ -353,10 +347,6 @@ where
 
     fn get_block_epoch(&self) -> Result<Epoch> {
         self.ctx.get_block_epoch()
-    }
-
-    fn get_tx_index(&self) -> Result<TxIndex> {
-        self.ctx.get_tx_index()
     }
 
     fn get_native_token(&self) -> Result<Address> {

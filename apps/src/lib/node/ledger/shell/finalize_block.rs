@@ -401,11 +401,6 @@ where
             match protocol::dispatch_tx(
                 tx,
                 processed_tx.tx.as_ref(),
-                TxIndex(
-                    tx_index
-                        .try_into()
-                        .expect("transaction index out of bounds"),
-                ),
                 &mut tx_gas_meter,
                 &mut self.wl_storage,
                 &mut self.vp_wasm_cache,
@@ -5304,7 +5299,6 @@ mod test_finalize_block {
             &shell.wl_storage.storage,
             &shell.wl_storage.write_log,
             &tx,
-            &TxIndex(0),
             gas_meter,
             &keys_changed,
             &verifiers,

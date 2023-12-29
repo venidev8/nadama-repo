@@ -41,7 +41,6 @@ where
     use namada_core::types::transaction::DecryptedTx;
 
     use crate::ledger::protocol::ShellParams;
-    use crate::types::storage::TxIndex;
     use crate::types::transaction::TxType;
 
     let mut tx = Tx::try_from(&request.data[..]).into_storage_result()?;
@@ -101,7 +100,6 @@ where
 
     let mut data = protocol::apply_wasm_tx(
         tx,
-        &TxIndex(0),
         ShellParams::new(
             &mut tx_gas_meter,
             &mut temp_wl_storage,

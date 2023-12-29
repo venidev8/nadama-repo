@@ -26,9 +26,7 @@ use crate::proto::Tx;
 use crate::types::address::Address;
 use crate::types::hash::Hash;
 use crate::types::ibc::IbcEvent;
-use crate::types::storage::{
-    BlockHash, BlockHeight, Epoch, Header, Key, TxIndex,
-};
+use crate::types::storage::{BlockHash, BlockHeight, Epoch, Header, Key};
 use crate::vm::prefix_iter::PrefixIterators;
 use crate::vm::WasmCacheAccess;
 
@@ -77,9 +75,6 @@ where
     pub write_log: &'a WriteLog,
     /// The transaction code is used for signature verification
     pub tx: &'a Tx,
-    /// The transaction index is used to obtain the shielded transaction's
-    /// parent
-    pub tx_index: &'a TxIndex,
     /// The storage keys that have been changed. Used for calls to `eval`.
     pub keys_changed: &'a BTreeSet<Key>,
     /// The verifiers whose validity predicates should be triggered. Used for
@@ -130,7 +125,6 @@ where
         storage: &'a Storage<DB, H>,
         write_log: &'a WriteLog,
         tx: &'a Tx,
-        tx_index: &'a TxIndex,
         gas_meter: VpGasMeter,
         keys_changed: &'a BTreeSet<Key>,
         verifiers: &'a BTreeSet<Address>,
@@ -145,7 +139,6 @@ where
             storage,
             write_log,
             tx,
-            tx_index,
             keys_changed,
             verifiers,
             #[cfg(feature = "wasm-runtime")]
@@ -259,10 +252,6 @@ where
         self.ctx.get_block_epoch()
     }
 
-    fn get_tx_index(&self) -> Result<TxIndex, storage_api::Error> {
-        self.ctx.get_tx_index().into_storage_result()
-    }
-
     fn get_native_token(&self) -> Result<Address, storage_api::Error> {
         self.ctx.get_native_token()
     }
@@ -355,10 +344,6 @@ where
 
     fn get_block_epoch(&self) -> Result<Epoch, storage_api::Error> {
         self.ctx.get_block_epoch()
-    }
-
-    fn get_tx_index(&self) -> Result<TxIndex, storage_api::Error> {
-        self.ctx.get_tx_index().into_storage_result()
     }
 
     fn get_native_token(&self) -> Result<Address, storage_api::Error> {
@@ -460,15 +445,6 @@ where
         .into_storage_result()
     }
 
-    fn get_tx_index(&self) -> Result<TxIndex, storage_api::Error> {
-        vp_host_fns::get_tx_index(
-            &mut self.gas_meter.borrow_mut(),
-            self.tx_index,
-            &mut self.sentinel.borrow_mut(),
-        )
-        .into_storage_result()
-    }
-
     fn get_native_token(&self) -> Result<Address, storage_api::Error> {
         vp_host_fns::get_native_token(
             &mut self.gas_meter.borrow_mut(),
@@ -533,7 +509,6 @@ where
                 &mut self.gas_meter.borrow_mut(),
                 &mut self.sentinel.borrow_mut(),
                 self.tx,
-                self.tx_index,
                 &mut iterators,
                 self.verifiers,
                 &mut result_buffer,

@@ -7,7 +7,7 @@ use namada::ledger::storage::write_log::WriteLog;
 use namada::ledger::storage::{Sha256Hasher, WlStorage};
 use namada::proto::Tx;
 use namada::types::address::{self, Address};
-use namada::types::storage::{self, Key, TxIndex};
+use namada::types::storage::{self, Key};
 use namada::types::transaction::TxType;
 use namada::vm::prefix_iter::PrefixIterators;
 use namada::vm::wasm::{self, VpCache};
@@ -47,7 +47,6 @@ pub struct TestVpEnv {
     pub gas_meter: VpGasMeter,
     pub sentinel: VpSentinel,
     pub tx: Tx,
-    pub tx_index: TxIndex,
     pub keys_changed: BTreeSet<storage::Key>,
     pub verifiers: BTreeSet<Address>,
     pub eval_runner: native_vp_host_env::VpEval,
@@ -81,7 +80,6 @@ impl Default for TestVpEnv {
             ),
             sentinel: VpSentinel::default(),
             tx,
-            tx_index: TxIndex::default(),
             keys_changed: BTreeSet::default(),
             verifiers: BTreeSet::default(),
             eval_runner,
@@ -263,7 +261,6 @@ mod native_vp_host_env {
                                 gas_meter,
                                 sentinel,
                                 tx,
-                                tx_index,
                                 keys_changed,
                                 verifiers,
                                 eval_runner,
@@ -280,7 +277,6 @@ mod native_vp_host_env {
                                 gas_meter,
                                 sentinel,
                                 tx,
-                                tx_index,
                                 verifiers,
                                 result_buffer,
                                 keys_changed,
@@ -308,7 +304,6 @@ mod native_vp_host_env {
                                 gas_meter,
                                 sentinel,
                                 tx,
-                                tx_index,
                                 keys_changed,
                                 verifiers,
                                 eval_runner,
@@ -325,7 +320,6 @@ mod native_vp_host_env {
                                 gas_meter,
                                 sentinel,
                                 tx,
-                                tx_index,
                                 verifiers,
                                 result_buffer,
                                 keys_changed,
@@ -355,7 +349,6 @@ mod native_vp_host_env {
     native_host_fn!(vp_iter_next(iter_id: u64) -> i64);
     native_host_fn!(vp_get_chain_id(result_ptr: u64));
     native_host_fn!(vp_get_block_height() -> u64);
-    native_host_fn!(vp_get_tx_index() -> u32);
     native_host_fn!(vp_get_block_header(height: u64) -> i64);
     native_host_fn!(vp_get_block_hash(result_ptr: u64));
     native_host_fn!(vp_get_tx_code_hash(result_ptr: u64));

@@ -36,7 +36,6 @@ use namada_core::types::chain::CHAIN_ID_LENGTH;
 pub use namada_core::types::ethereum_events::EthAddress;
 use namada_core::types::internal::HostEnvResult;
 use namada_core::types::key::common;
-use namada_core::types::storage::TxIndex;
 pub use namada_core::types::storage::{
     self, BlockHash, BlockHeight, Epoch, Header, BLOCK_HASH_LENGTH,
 };
@@ -214,11 +213,6 @@ impl StorageRead for Ctx {
             read_result,
             namada_tx_result_buffer,
         ))
-    }
-
-    fn get_tx_index(&self) -> Result<TxIndex, storage_api::Error> {
-        let tx_index = unsafe { namada_tx_get_tx_index() };
-        Ok(TxIndex(tx_index))
     }
 }
 

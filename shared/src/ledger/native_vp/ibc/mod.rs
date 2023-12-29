@@ -410,7 +410,7 @@ mod tests {
     use crate::tendermint::time::Time as TmTime;
     use crate::tendermint_proto::Protobuf as TmProtobuf;
     use crate::types::key::testing::keypair_1;
-    use crate::types::storage::{BlockHash, BlockHeight, TxIndex};
+    use crate::types::storage::{BlockHash, BlockHeight};
     use crate::types::time::DurationSecs;
     use crate::types::token::{balance_key, Amount};
     use crate::types::transaction::TxType;
@@ -714,7 +714,6 @@ mod tests {
             .write_log
             .emit_ibc_event(event.try_into().unwrap());
 
-        let tx_index = TxIndex::default();
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
@@ -739,7 +738,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &outer_tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -795,7 +793,6 @@ mod tests {
             signer: "account0".to_string().into(),
         };
 
-        let tx_index = TxIndex::default();
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
@@ -817,7 +814,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -923,7 +919,6 @@ mod tests {
             .write_log
             .emit_ibc_event(event.try_into().unwrap());
 
-        let tx_index = TxIndex::default();
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
@@ -945,7 +940,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -1031,7 +1025,6 @@ mod tests {
             .write_log
             .emit_ibc_event(event.try_into().unwrap());
 
-        let tx_index = TxIndex::default();
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
@@ -1056,7 +1049,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &outer_tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -1130,7 +1122,6 @@ mod tests {
         keys_changed.insert(conn_counter_key);
         // No event
 
-        let tx_index = TxIndex::default();
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
@@ -1152,7 +1143,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -1259,7 +1249,6 @@ mod tests {
             .write_log
             .emit_ibc_event(event.try_into().unwrap());
 
-        let tx_index = TxIndex::default();
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
@@ -1280,7 +1269,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -1368,7 +1356,7 @@ mod tests {
             .emit_ibc_event(event.try_into().unwrap());
 
         let tx_code = vec![];
-        let tx_index = TxIndex::default();
+
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let mut outer_tx = Tx::from_type(TxType::Raw);
@@ -1392,7 +1380,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &outer_tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -1465,7 +1452,7 @@ mod tests {
             .emit_ibc_event(event.try_into().unwrap());
 
         let tx_code = vec![];
-        let tx_index = TxIndex::default();
+
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let mut outer_tx = Tx::from_type(TxType::Raw);
@@ -1489,7 +1476,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &outer_tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -1589,7 +1575,6 @@ mod tests {
             .write_log
             .emit_ibc_event(event.try_into().unwrap());
 
-        let tx_index = TxIndex::default();
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
@@ -1614,7 +1599,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &outer_tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -1713,7 +1697,6 @@ mod tests {
             .write_log
             .emit_ibc_event(event.try_into().unwrap());
 
-        let tx_index = TxIndex::default();
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
@@ -1738,7 +1721,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &outer_tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -1822,7 +1804,6 @@ mod tests {
             .write_log
             .emit_ibc_event(event.try_into().unwrap());
 
-        let tx_index = TxIndex::default();
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
@@ -1847,7 +1828,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &outer_tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -1929,7 +1909,6 @@ mod tests {
             .write_log
             .emit_ibc_event(event.try_into().unwrap());
 
-        let tx_index = TxIndex::default();
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
@@ -1951,7 +1930,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -2071,7 +2049,6 @@ mod tests {
             .write_log
             .emit_ibc_event(event.try_into().unwrap());
 
-        let tx_index = TxIndex::default();
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
@@ -2093,7 +2070,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -2266,7 +2242,6 @@ mod tests {
             .write_log
             .emit_ibc_event(event.try_into().unwrap());
 
-        let tx_index = TxIndex::default();
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
@@ -2288,7 +2263,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -2413,7 +2387,6 @@ mod tests {
             .write_log
             .emit_ibc_event(event.try_into().unwrap());
 
-        let tx_index = TxIndex::default();
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
@@ -2435,7 +2408,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -2564,7 +2536,6 @@ mod tests {
             .write_log
             .emit_ibc_event(event.try_into().unwrap());
 
-        let tx_index = TxIndex::default();
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
@@ -2586,7 +2557,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -2716,7 +2686,6 @@ mod tests {
             .write_log
             .emit_ibc_event(event.try_into().unwrap());
 
-        let tx_index = TxIndex::default();
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
@@ -2738,7 +2707,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,

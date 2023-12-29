@@ -44,7 +44,7 @@ use crate::types::hash::{Error as HashError, Hash};
 use crate::types::internal::{ExpiredTxsQueue, TxQueue};
 use crate::types::storage::{
     BlockHash, BlockHeight, BlockResults, Epoch, Epochs, EthEventsQueue,
-    Header, Key, KeySeg, MembershipProof, TxIndex, BLOCK_HASH_LENGTH,
+    Header, Key, KeySeg, MembershipProof, BLOCK_HASH_LENGTH,
     BLOCK_HEIGHT_LENGTH, EPOCH_TYPE_LENGTH,
 };
 use crate::types::time::DateTimeUtc;
@@ -93,8 +93,6 @@ where
     /// Once the value is `Some(0)`, we're ready to switch to a new epoch and
     /// this is reset back to `None`.
     pub update_epoch_blocks_delay: Option<u32>,
-    /// The shielded transaction index
-    pub tx_index: TxIndex,
     /// The currently saved conversion state
     pub conversion_state: ConversionState,
     /// Wrapper txs to be decrypted in the next block proposal
@@ -443,7 +441,6 @@ where
                 "Privacy is a function of liberty.",
             ),
             update_epoch_blocks_delay: None,
-            tx_index: TxIndex::default(),
             conversion_state: ConversionState::default(),
             tx_queue: TxQueue::default(),
             expired_txs_queue: ExpiredTxsQueue::default(),
@@ -1268,7 +1265,7 @@ pub mod testing {
                     "Test address generator seed",
                 ),
                 update_epoch_blocks_delay: None,
-                tx_index: TxIndex::default(),
+
                 conversion_state: ConversionState::default(),
                 tx_queue: TxQueue::default(),
                 expired_txs_queue: ExpiredTxsQueue::default(),

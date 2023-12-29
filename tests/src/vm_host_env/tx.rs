@@ -10,7 +10,7 @@ use namada::ledger::storage::{Sha256Hasher, WlStorage};
 use namada::proto::Tx;
 use namada::types::address::Address;
 use namada::types::hash::Hash;
-use namada::types::storage::{Key, TxIndex};
+use namada::types::storage::Key;
 use namada::types::time::DurationSecs;
 pub use namada::types::transaction::TxType;
 use namada::types::{key, token};
@@ -53,7 +53,6 @@ pub struct TestTxEnv {
     pub verifiers: BTreeSet<Address>,
     pub gas_meter: TxGasMeter,
     pub sentinel: TxSentinel,
-    pub tx_index: TxIndex,
     pub result_buffer: Option<Vec<u8>>,
     pub vp_wasm_cache: VpCache<WasmCacheRwAccess>,
     pub vp_cache_dir: TempDir,
@@ -78,7 +77,6 @@ impl Default for TestTxEnv {
             iterators: PrefixIterators::default(),
             gas_meter: TxGasMeter::new_from_sub_limit(100_000_000.into()),
             sentinel: TxSentinel::default(),
-            tx_index: TxIndex::default(),
             verifiers: BTreeSet::default(),
             result_buffer: None,
             vp_wasm_cache,
@@ -230,7 +228,6 @@ impl TestTxEnv {
             &self.wl_storage.storage,
             &mut self.wl_storage.write_log,
             &mut self.gas_meter,
-            &self.tx_index,
             &self.tx,
             &mut self.vp_wasm_cache,
             &mut self.tx_wasm_cache,
@@ -349,7 +346,6 @@ mod native_tx_host_env {
                                 gas_meter,
                                 sentinel,
                                 result_buffer,
-                                tx_index,
                                 vp_wasm_cache,
                                 vp_cache_dir: _,
                                 tx_wasm_cache,
@@ -365,7 +361,6 @@ mod native_tx_host_env {
                                 gas_meter,
                                 sentinel,
                                 tx,
-                                tx_index,
                                 result_buffer,
                                 vp_wasm_cache,
                                 tx_wasm_cache,
@@ -385,7 +380,6 @@ mod native_tx_host_env {
                     #[no_mangle]
                     extern "C" fn extern_fn_name( $($arg: $type),* ) -> $ret {
                         with(|TestTxEnv {
-                            tx_index,
                                 wl_storage,
                                 iterators,
                                 verifiers,
@@ -407,7 +401,6 @@ mod native_tx_host_env {
                                 gas_meter,
                                 sentinel,
                                 tx,
-                                tx_index,
                                 result_buffer,
                                 vp_wasm_cache,
                                 tx_wasm_cache,
@@ -433,7 +426,6 @@ mod native_tx_host_env {
                                 gas_meter,
                                 sentinel,
                                 result_buffer,
-                                tx_index,
                                 vp_wasm_cache,
                                 vp_cache_dir: _,
                                 tx_wasm_cache,
@@ -449,7 +441,6 @@ mod native_tx_host_env {
                                 gas_meter,
                                 sentinel,
                                 tx,
-                                tx_index,
                                 result_buffer,
                                 vp_wasm_cache,
                                 tx_wasm_cache,
@@ -503,7 +494,6 @@ mod native_tx_host_env {
     native_host_fn!(tx_get_ibc_events(event_type_ptr: u64, event_type_len: u64) -> i64);
     native_host_fn!(tx_get_chain_id(result_ptr: u64));
     native_host_fn!(tx_get_block_height() -> u64);
-    native_host_fn!(tx_get_tx_index() -> u32);
     native_host_fn!(tx_get_block_header(height: u64) -> i64);
     native_host_fn!(tx_get_block_hash(result_ptr: u64));
     native_host_fn!(tx_get_block_epoch() -> u64);

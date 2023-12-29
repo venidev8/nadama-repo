@@ -153,7 +153,6 @@ mod tests {
     use crate::proto::{Code, Data, Section, Signature, Tx};
     use crate::types::address::{Address, InternalAddress};
     use crate::types::key::testing::keypair_1;
-    use crate::types::storage::TxIndex;
     use crate::types::token::{
         balance_key, minted_balance_key, minter_key, Amount,
     };
@@ -206,7 +205,6 @@ mod tests {
             .expect("write failed");
         keys_changed.insert(receiver_key);
 
-        let tx_index = TxIndex::default();
         let tx = dummy_tx(&wl_storage);
         let gas_meter = VpGasMeter::new_from_tx_meter(
             &TxGasMeter::new_from_sub_limit(u64::MAX.into()),
@@ -219,7 +217,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -263,7 +260,6 @@ mod tests {
             .expect("write failed");
         keys_changed.insert(receiver_key);
 
-        let tx_index = TxIndex::default();
         let tx = dummy_tx(&wl_storage);
         let gas_meter = VpGasMeter::new_from_tx_meter(
             &TxGasMeter::new_from_sub_limit(u64::MAX.into()),
@@ -275,7 +271,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -323,7 +318,6 @@ mod tests {
             .expect("write failed");
         keys_changed.insert(minter_key);
 
-        let tx_index = TxIndex::default();
         let tx = dummy_tx(&wl_storage);
         let gas_meter = VpGasMeter::new_from_tx_meter(
             &TxGasMeter::new_from_sub_limit(u64::MAX.into()),
@@ -337,7 +331,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -383,7 +376,6 @@ mod tests {
             .expect("write failed");
         keys_changed.insert(minter_key);
 
-        let tx_index = TxIndex::default();
         let tx = dummy_tx(&wl_storage);
         let gas_meter = VpGasMeter::new_from_tx_meter(
             &TxGasMeter::new_from_sub_limit(u64::MAX.into()),
@@ -397,7 +389,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -438,7 +429,6 @@ mod tests {
 
         // no minter is set
 
-        let tx_index = TxIndex::default();
         let tx = dummy_tx(&wl_storage);
         let gas_meter = VpGasMeter::new_from_tx_meter(
             &TxGasMeter::new_from_sub_limit(u64::MAX.into()),
@@ -450,7 +440,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -498,7 +487,6 @@ mod tests {
             .expect("write failed");
         keys_changed.insert(minter_key);
 
-        let tx_index = TxIndex::default();
         let tx = dummy_tx(&wl_storage);
         let gas_meter = VpGasMeter::new_from_tx_meter(
             &TxGasMeter::new_from_sub_limit(u64::MAX.into()),
@@ -512,7 +500,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -540,7 +527,6 @@ mod tests {
 
         keys_changed.insert(minter_key);
 
-        let tx_index = TxIndex::default();
         let tx = dummy_tx(&wl_storage);
         let gas_meter = VpGasMeter::new_from_tx_meter(
             &TxGasMeter::new_from_sub_limit(u64::MAX.into()),
@@ -554,7 +540,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,
@@ -585,7 +570,6 @@ mod tests {
 
         keys_changed.insert(key);
 
-        let tx_index = TxIndex::default();
         let tx = dummy_tx(&wl_storage);
         let gas_meter = VpGasMeter::new_from_tx_meter(
             &TxGasMeter::new_from_sub_limit(u64::MAX.into()),
@@ -597,7 +581,6 @@ mod tests {
             &wl_storage.storage,
             &wl_storage.write_log,
             &tx,
-            &tx_index,
             gas_meter,
             &keys_changed,
             &verifiers,

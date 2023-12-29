@@ -21,7 +21,7 @@ use crate::proto::{Commitment, Section, Tx};
 use crate::types::address::Address;
 use crate::types::hash::{Error as TxHashError, Hash};
 use crate::types::internal::HostEnvResult;
-use crate::types::storage::{Key, TxIndex};
+use crate::types::storage::Key;
 use crate::vm::host_env::{TxVmEnv, VpCtx, VpEvaluator, VpVmEnv};
 use crate::vm::prefix_iter::PrefixIterators;
 use crate::vm::types::VpInput;
@@ -95,7 +95,6 @@ pub fn tx<DB, H, CA>(
     storage: &Storage<DB, H>,
     write_log: &mut WriteLog,
     gas_meter: &mut TxGasMeter,
-    tx_index: &TxIndex,
     tx: &Tx,
     vp_wasm_cache: &mut VpCache<CA>,
     tx_wasm_cache: &mut TxCache<CA>,
@@ -166,7 +165,6 @@ where
         gas_meter,
         &mut sentinel,
         tx,
-        tx_index,
         &mut verifiers,
         &mut result_buffer,
         vp_wasm_cache,
@@ -222,7 +220,6 @@ where
 pub fn vp<DB, H, CA>(
     vp_code_hash: Hash,
     tx: &Tx,
-    tx_index: &TxIndex,
     address: &Address,
     storage: &Storage<DB, H>,
     write_log: &WriteLog,
@@ -262,7 +259,6 @@ where
         gas_meter,
         &mut sentinel,
         tx,
-        tx_index,
         &mut iterators,
         verifiers,
         &mut result_buffer,
@@ -701,7 +697,6 @@ mod tests {
         let storage = TestStorage::default();
         let mut write_log = WriteLog::default();
         let mut gas_meter = TxGasMeter::new_from_sub_limit(TX_GAS_LIMIT.into());
-        let tx_index = TxIndex::default();
 
         // This code will allocate memory of the given size
         let tx_code = TestWasms::TxMemoryLimit.read_bytes();
@@ -730,7 +725,6 @@ mod tests {
             &storage,
             &mut write_log,
             &mut gas_meter,
-            &tx_index,
             &outer_tx,
             &mut vp_cache,
             &mut tx_cache,
@@ -747,7 +741,6 @@ mod tests {
             &storage,
             &mut write_log,
             &mut gas_meter,
-            &tx_index,
             &outer_tx,
             &mut vp_cache,
             &mut tx_cache,
@@ -770,7 +763,6 @@ mod tests {
         );
         let keys_changed = BTreeSet::new();
         let verifiers = BTreeSet::new();
-        let tx_index = TxIndex::default();
 
         // This code will call `eval` with the other VP below
         let vp_eval = TestWasms::VpEval.read_bytes();
@@ -815,7 +807,6 @@ mod tests {
         let passed = vp(
             code_hash,
             &outer_tx,
-            &tx_index,
             &addr,
             &storage,
             &write_log,
@@ -847,7 +838,6 @@ mod tests {
         let passed = vp(
             code_hash,
             &outer_tx,
-            &tx_index,
             &addr,
             &storage,
             &write_log,
@@ -873,7 +863,6 @@ mod tests {
         );
         let keys_changed = BTreeSet::new();
         let verifiers = BTreeSet::new();
-        let tx_index = TxIndex::default();
 
         // This code will allocate memory of the given size
         let vp_code = TestWasms::VpMemoryLimit.read_bytes();
@@ -899,7 +888,6 @@ mod tests {
         let result = vp(
             code_hash,
             &outer_tx,
-            &tx_index,
             &addr,
             &storage,
             &write_log,
@@ -919,7 +907,6 @@ mod tests {
         let error = vp(
             code_hash,
             &outer_tx,
-            &tx_index,
             &addr,
             &storage,
             &write_log,
@@ -940,7 +927,6 @@ mod tests {
         let storage = TestStorage::default();
         let mut write_log = WriteLog::default();
         let mut gas_meter = TxGasMeter::new_from_sub_limit(TX_GAS_LIMIT.into());
-        let tx_index = TxIndex::default();
 
         let tx_no_op = TestWasms::TxNoOp.read_bytes();
         // store the wasm code
@@ -969,7 +955,6 @@ mod tests {
             &storage,
             &mut write_log,
             &mut gas_meter,
-            &tx_index,
             &outer_tx,
             &mut vp_cache,
             &mut tx_cache,
@@ -1005,7 +990,6 @@ mod tests {
         );
         let keys_changed = BTreeSet::new();
         let verifiers = BTreeSet::new();
-        let tx_index = TxIndex::default();
 
         let vp_code = TestWasms::VpAlwaysTrue.read_bytes();
         // store the wasm code
@@ -1031,7 +1015,6 @@ mod tests {
         let result = vp(
             code_hash,
             &outer_tx,
-            &tx_index,
             &addr,
             &storage,
             &write_log,
@@ -1069,7 +1052,6 @@ mod tests {
         let mut storage = TestStorage::default();
         let mut write_log = WriteLog::default();
         let mut gas_meter = TxGasMeter::new_from_sub_limit(TX_GAS_LIMIT.into());
-        let tx_index = TxIndex::default();
 
         let tx_read_key = TestWasms::TxReadStorageKey.read_bytes();
         // store the wasm code
@@ -1103,7 +1085,6 @@ mod tests {
             &storage,
             &mut write_log,
             &mut gas_meter,
-            &tx_index,
             &outer_tx,
             &mut vp_cache,
             &mut tx_cache,
@@ -1126,7 +1107,6 @@ mod tests {
         );
         let keys_changed = BTreeSet::new();
         let verifiers = BTreeSet::new();
-        let tx_index = TxIndex::default();
 
         let vp_read_key = TestWasms::VpReadStorageKey.read_bytes();
         // store the wasm code
@@ -1157,7 +1137,6 @@ mod tests {
         let error = vp(
             code_hash,
             &outer_tx,
-            &tx_index,
             &addr,
             &storage,
             &write_log,
@@ -1185,7 +1164,6 @@ mod tests {
         );
         let keys_changed = BTreeSet::new();
         let verifiers = BTreeSet::new();
-        let tx_index = TxIndex::default();
 
         // This code will call `eval` with the other VP below
         let vp_eval = TestWasms::VpEval.read_bytes();
@@ -1234,7 +1212,6 @@ mod tests {
         let passed = vp(
             code_hash,
             &outer_tx,
-            &tx_index,
             &addr,
             &storage,
             &write_log,
@@ -1283,7 +1260,6 @@ mod tests {
         .into_owned();
 
         let tx_data = vec![];
-        let tx_index = TxIndex::default();
         let storage = TestStorage::default();
         let mut write_log = WriteLog::default();
         let mut gas_meter = TxGasMeter::new_from_sub_limit(TX_GAS_LIMIT.into());
@@ -1308,7 +1284,6 @@ mod tests {
             &storage,
             &mut write_log,
             &mut gas_meter,
-            &tx_index,
             &outer_tx,
             &mut vp_cache,
             &mut tx_cache,
@@ -1345,7 +1320,6 @@ mod tests {
             .expect("unexpected error converting wat2wasm").into_owned();
 
         let outer_tx = Tx::from_type(TxType::Raw);
-        let tx_index = TxIndex::default();
         let mut storage = TestStorage::default();
         let addr = storage.address_gen.generate_address("rng seed");
         let write_log = WriteLog::default();
@@ -1366,7 +1340,6 @@ mod tests {
         vp(
             code_hash,
             &outer_tx,
-            &tx_index,
             &addr,
             &storage,
             &write_log,

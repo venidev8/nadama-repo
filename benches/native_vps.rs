@@ -49,7 +49,7 @@ use namada::proto::{Code, Section, Tx};
 use namada::types::address::InternalAddress;
 use namada::types::eth_bridge_pool::{GasFee, PendingTransfer};
 use namada::types::masp::{TransferSource, TransferTarget};
-use namada::types::storage::{Epoch, TxIndex};
+use namada::types::storage::Epoch;
 use namada::types::transaction::governance::{
     InitProposalData, VoteProposalData,
 };
@@ -207,7 +207,6 @@ fn governance(c: &mut Criterion) {
                 &shell.wl_storage.storage,
                 &shell.wl_storage.write_log,
                 &signed_tx,
-                &TxIndex(0),
                 VpGasMeter::new_from_tx_meter(&TxGasMeter::new_from_sub_limit(
                     u64::MAX.into(),
                 )),
@@ -381,7 +380,6 @@ fn ibc(c: &mut Criterion) {
                 &shell.wl_storage.storage,
                 &shell.wl_storage.write_log,
                 signed_tx,
-                &TxIndex(0),
                 VpGasMeter::new_from_tx_meter(&TxGasMeter::new_from_sub_limit(
                     u64::MAX.into(),
                 )),
@@ -447,7 +445,6 @@ fn vp_multitoken(c: &mut Criterion) {
                 &shell.wl_storage.storage,
                 &shell.wl_storage.write_log,
                 signed_tx,
-                &TxIndex(0),
                 VpGasMeter::new_from_tx_meter(&TxGasMeter::new_from_sub_limit(
                     u64::MAX.into(),
                 )),
@@ -566,7 +563,6 @@ fn masp(c: &mut Criterion) {
                     &shielded_ctx.shell.wl_storage.storage,
                     &shielded_ctx.shell.wl_storage.write_log,
                     &signed_tx,
-                    &TxIndex(0),
                     VpGasMeter::new_from_tx_meter(
                         &TxGasMeter::new_from_sub_limit(u64::MAX.into()),
                     ),
@@ -682,7 +678,6 @@ fn pgf(c: &mut Criterion) {
                 &shell.wl_storage.storage,
                 &shell.wl_storage.write_log,
                 &signed_tx,
-                &TxIndex(0),
                 VpGasMeter::new_from_tx_meter(&TxGasMeter::new_from_sub_limit(
                     u64::MAX.into(),
                 )),
@@ -754,7 +749,6 @@ fn eth_bridge_nut(c: &mut Criterion) {
             &shell.wl_storage.storage,
             &shell.wl_storage.write_log,
             &signed_tx,
-            &TxIndex(0),
             VpGasMeter::new_from_tx_meter(&TxGasMeter::new_from_sub_limit(
                 u64::MAX.into(),
             )),
@@ -822,7 +816,6 @@ fn eth_bridge(c: &mut Criterion) {
             &shell.wl_storage.storage,
             &shell.wl_storage.write_log,
             &signed_tx,
-            &TxIndex(0),
             VpGasMeter::new_from_tx_meter(&TxGasMeter::new_from_sub_limit(
                 u64::MAX.into(),
             )),
@@ -919,7 +912,6 @@ fn eth_bridge_pool(c: &mut Criterion) {
             &shell.wl_storage.storage,
             &shell.wl_storage.write_log,
             &signed_tx,
-            &TxIndex(0),
             VpGasMeter::new_from_tx_meter(&TxGasMeter::new_from_sub_limit(
                 u64::MAX.into(),
             )),
@@ -995,7 +987,6 @@ fn parameters(c: &mut Criterion) {
                 &shell.wl_storage.storage,
                 &shell.wl_storage.write_log,
                 &signed_tx,
-                &TxIndex(0),
                 VpGasMeter::new_from_tx_meter(&TxGasMeter::new_from_sub_limit(
                     u64::MAX.into(),
                 )),
@@ -1074,7 +1065,6 @@ fn pos(c: &mut Criterion) {
                 &shell.wl_storage.storage,
                 &shell.wl_storage.write_log,
                 &signed_tx,
-                &TxIndex(0),
                 VpGasMeter::new_from_tx_meter(&TxGasMeter::new_from_sub_limit(
                     u64::MAX.into(),
                 )),
@@ -1174,7 +1164,6 @@ fn ibc_vp_validate_action(c: &mut Criterion) {
                 &shell.wl_storage.storage,
                 &shell.wl_storage.write_log,
                 signed_tx,
-                &TxIndex(0),
                 VpGasMeter::new_from_tx_meter(&TxGasMeter::new_from_sub_limit(
                     u64::MAX.into(),
                 )),
@@ -1272,7 +1261,6 @@ fn ibc_vp_execute_action(c: &mut Criterion) {
                 &shell.wl_storage.storage,
                 &shell.wl_storage.write_log,
                 signed_tx,
-                &TxIndex(0),
                 VpGasMeter::new_from_tx_meter(&TxGasMeter::new_from_sub_limit(
                     u64::MAX.into(),
                 )),

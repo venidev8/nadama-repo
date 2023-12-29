@@ -280,7 +280,6 @@ where
             &[], /*  this is used to compute the fee
                   * based on the code size. We dont
                   * need it here. */
-            TxIndex::default(),
             &mut TxGasMeter::new_from_sub_limit(u64::MAX.into()), /* No gas limit for governance proposal */
             &mut shell.wl_storage,
             &mut shell.vp_wasm_cache,

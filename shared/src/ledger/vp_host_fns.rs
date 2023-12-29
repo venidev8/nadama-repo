@@ -5,9 +5,7 @@ use std::num::TryFromIntError;
 use namada_core::ledger::gas::MEMORY_ACCESS_GAS_PER_BYTE;
 use namada_core::types::address::{Address, ESTABLISHED_ADDRESS_BYTES_LEN};
 use namada_core::types::hash::{Hash, HASH_LENGTH};
-use namada_core::types::storage::{
-    BlockHash, BlockHeight, Epoch, Header, Key, TxIndex, TX_INDEX_LENGTH,
-};
+use namada_core::types::storage::{BlockHash, BlockHeight, Epoch, Header, Key};
 use namada_core::types::validity_predicate::VpSentinel;
 use thiserror::Error;
 
@@ -329,21 +327,6 @@ where
     let (epoch, gas) = storage.get_current_epoch();
     add_gas(gas_meter, gas, sentinel)?;
     Ok(epoch)
-}
-
-/// Getting the block epoch. The epoch is that of the block to which the
-/// current transaction is being applied.
-pub fn get_tx_index(
-    gas_meter: &mut VpGasMeter,
-    tx_index: &TxIndex,
-    sentinel: &mut VpSentinel,
-) -> EnvResult<TxIndex> {
-    add_gas(
-        gas_meter,
-        TX_INDEX_LENGTH as u64 * MEMORY_ACCESS_GAS_PER_BYTE,
-        sentinel,
-    )?;
-    Ok(*tx_index)
 }
 
 /// Getting the native token's address.

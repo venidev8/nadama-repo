@@ -14,7 +14,7 @@ use namada::ledger::gas::{TxGasMeter, VpGasMeter};
 use namada::proto::{Code, Section};
 use namada::types::hash::Hash;
 use namada::types::key::ed25519;
-use namada::types::storage::{Key, TxIndex};
+use namada::types::storage::Key;
 use namada::types::transaction::governance::VoteProposalData;
 use namada::types::transaction::pos::{Bond, CommissionChange};
 use namada::vm::wasm::run;
@@ -152,7 +152,6 @@ fn vp_user(c: &mut Criterion) {
                     run::vp(
                         vp_code_hash,
                         signed_tx,
-                        &TxIndex(0),
                         &defaults::albert_address(),
                         &shell.wl_storage.storage,
                         &shell.wl_storage.write_log,
@@ -299,7 +298,6 @@ fn vp_implicit(c: &mut Criterion) {
                     run::vp(
                         vp_code_hash,
                         tx,
-                        &TxIndex(0),
                         &Address::from(&implicit_account.to_public()),
                         &shell.wl_storage.storage,
                         &shell.wl_storage.write_log,
@@ -451,7 +449,6 @@ fn vp_validator(c: &mut Criterion) {
                     run::vp(
                         vp_code_hash,
                         signed_tx,
-                        &TxIndex(0),
                         &defaults::validator_address(),
                         &shell.wl_storage.storage,
                         &shell.wl_storage.write_log,

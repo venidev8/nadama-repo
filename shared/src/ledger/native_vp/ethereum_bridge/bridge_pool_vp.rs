@@ -661,7 +661,6 @@ mod test_bridge_pool_vp {
     use crate::types::chain::ChainId;
     use crate::types::eth_bridge_pool::{GasFee, TransferToEthereum};
     use crate::types::hash::Hash;
-    use crate::types::storage::TxIndex;
     use crate::types::transaction::TxType;
     use crate::vm::wasm::VpCache;
     use crate::vm::WasmCacheRwAccess;
@@ -943,7 +942,6 @@ mod test_bridge_pool_vp {
             storage,
             write_log,
             tx,
-            &TxIndex(0),
             VpGasMeter::new_from_tx_meter(&TxGasMeter::new_from_sub_limit(
                 u64::MAX.into(),
             )),

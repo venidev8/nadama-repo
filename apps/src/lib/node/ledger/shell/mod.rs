@@ -58,7 +58,7 @@ use namada::types::chain::ChainId;
 use namada::types::ethereum_events::EthereumEvent;
 use namada::types::internal::{ExpiredTx, TxInQueue};
 use namada::types::key::*;
-use namada::types::storage::{BlockHeight, Key, TxIndex};
+use namada::types::storage::{BlockHeight, Key};
 use namada::types::time::DateTimeUtc;
 use namada::types::transaction::protocol::EthereumTxData;
 use namada::types::transaction::{DecryptedTx, TxType, WrapperTx};
@@ -1450,7 +1450,6 @@ where
 
             match apply_wasm_tx(
                 unshield,
-                &TxIndex::default(),
                 ShellParams::new(
                     &mut TxGasMeter::new(fee_unshielding_gas_limit),
                     temp_wl_storage,

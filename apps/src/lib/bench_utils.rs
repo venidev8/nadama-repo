@@ -69,7 +69,7 @@ use namada::types::io::StdIo;
 use namada::types::masp::{
     ExtendedViewingKey, PaymentAddress, TransferSource, TransferTarget,
 };
-use namada::types::storage::{BlockHeight, Epoch, KeySeg, TxIndex};
+use namada::types::storage::{BlockHeight, Epoch, KeySeg};
 use namada::types::time::DateTimeUtc;
 use namada::types::token::DenominatedAmount;
 use namada::types::transaction::governance::InitProposalData;
@@ -388,7 +388,6 @@ impl BenchShell {
             &self.inner.wl_storage.storage,
             &mut self.inner.wl_storage.write_log,
             &mut TxGasMeter::new_from_sub_limit(u64::MAX.into()),
-            &TxIndex(0),
             tx,
             &mut self.inner.vp_wasm_cache,
             &mut self.inner.tx_wasm_cache,

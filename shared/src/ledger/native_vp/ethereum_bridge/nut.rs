@@ -126,7 +126,6 @@ mod test_nuts {
     use namada_core::ledger::storage_api::StorageWrite;
     use namada_core::types::address::testing::arb_non_internal_address;
     use namada_core::types::ethereum_events::testing::DAI_ERC20_ETH_ADDRESS;
-    use namada_core::types::storage::TxIndex;
     use namada_core::types::token::balance_key;
     use namada_core::types::transaction::TxType;
     use namada_ethereum_bridge::storage::wrapped_erc20s;
@@ -188,7 +187,6 @@ mod test_nuts {
             &wl_storage.storage,
             &wl_storage.write_log,
             &tx,
-            &TxIndex(0),
             VpGasMeter::new_from_tx_meter(&TxGasMeter::new_from_sub_limit(
                 u64::MAX.into(),
             )),
